@@ -145,8 +145,12 @@ def parse_date(raw: str) -> datetime | None:
         hour, minute = int(tm.group(1)), int(tm.group(2))
         second = int(tm.group(3) or 0)
         ampm = (tm.group(4) or "").lower()
-        if "下午" in raw or "晚上" in raw:
+        # 中文語系的 Takeout 用「凌晨/清晨/上午/中午/下午/晚上」代替 AM/PM。
+        # 注意「凌晨12:38」是 00:38，不是 12:38。
+        if any(mark in raw for mark in ("下午", "晚上", "傍晚")):
             ampm = ampm or "pm"
+        elif any(mark in raw for mark in ("凌晨", "清晨", "上午", "早上")):
+            ampm = ampm or "am"
         if ampm == "pm" and hour < 12:
             hour += 12
         elif ampm == "am" and hour == 12:
@@ -226,6 +230,15 @@ _EN_QUESTION_PATTERNS = [
 ]
 
 
+# 不是疑問句、但同樣需要別人回應的「請求」。工作群組裡這類訊息往往比問句還多，
+# 例如工程完工後回報「…已更換數據機 幫確認」，就必須有人接手確認結案。
+_REQUEST_PATTERNS = [
+    "麻煩", "煩請", "請協助", "請幫", "幫忙", "幫我", "幫確認", "幫查", "幫看",
+    "協助確認", "協助查", "協助處理", "再請", "需要協助", "拜託", "請支援",
+    "please help", "pls help", "help me", "could you", "can you",
+]
+
+
 def is_question(text: str) -> bool:
     """判斷一則訊息是否算是「在問問題」。"""
     if any(mark in text for mark in _QUESTION_MARKS):
@@ -236,6 +249,21 @@ def is_question(text: str) -> bool:
     if any(p in lowered for p in _EN_QUESTION_PATTERNS):
         return True
     return False
+
+
+def is_request(text: str) -> bool:
+    """判斷是否為請求他人協助的訊息（非疑問句）。"""
+    lowered = text.lower()
+    return any(p in text or p in lowered for p in _REQUEST_PATTERNS)
+
+
+def classify_kind(text: str) -> str | None:
+    """回傳 '問題'、'請求'，或 None（不需要回應的一般訊息）。"""
+    if is_question(text):
+        return "問題"
+    if is_request(text):
+        return "請求"
+    return None
 
 
 # --------------------------------------------------------------------------
@@ -381,22 +409,53 @@ def discover_keywords(texts: list[str], top_n: int = 30) -> list[tuple[str, int]
 # --------------------------------------------------------------------------
 
 
+OTHER_ROLE = "其他／未標註"
+
+
+def load_roles(path: Path | None) -> dict[str, list[str]]:
+    """讀取角色對照表：{角色名稱: [會出現在發話者名字裡的字串, ...]}。"""
+    if path is None:
+        return {}
+    with path.open(encoding="utf-8") as fh:
+        roles = json.load(fh)
+    return {k: [str(x) for x in v] for k, v in roles.items() if not k.startswith("_")}
+
+
+def role_of(author: str, roles: dict[str, list[str]]) -> str:
+    for role, markers in roles.items():
+        if any(marker in author for marker in markers):
+            return role
+    return OTHER_ROLE
+
+
 def build_stats(
-    messages: list[Message], rules: dict[str, list[str]], examples_per_category: int = 5
+    messages: list[Message],
+    rules: dict[str, list[str]],
+    examples_per_category: int = 5,
+    roles: dict[str, list[str]] | None = None,
 ) -> dict[str, Any]:
-    questions = [m for m in messages if is_question(m.text)]
+    roles = roles or {}
+    questions = [m for m in messages if classify_kind(m.text)]
 
     category_counts: Counter[str] = Counter()
     category_examples: dict[str, list[dict[str, str]]] = defaultdict(list)
     monthly: Counter[str] = Counter()
     monthly_by_category: dict[str, Counter[str]] = defaultdict(Counter)
     askers: Counter[str] = Counter()
+    kind_counts: Counter[str] = Counter()
+    role_counts: Counter[str] = Counter()
+    role_category: dict[str, Counter[str]] = defaultdict(Counter)
 
     for msg in questions:
         cats = categorize(msg.text, rules)
         month = msg.dt.strftime("%Y-%m") if msg.dt else "unknown"
         monthly[month] += 1
         askers[msg.author] += 1
+        kind_counts[classify_kind(msg.text) or "?"] += 1
+        r = role_of(msg.author, roles)
+        role_counts[r] += 1
+        for cat in cats:
+            role_category[r][cat] += 1
         for cat in cats:
             category_counts[cat] += 1
             monthly_by_category[cat][month] += 1
@@ -413,6 +472,16 @@ def build_stats(
     uncategorized_texts = [
         m.text for m in questions if categorize(m.text, rules) == [UNCATEGORIZED]
     ]
+    role_breakdown = {
+        r: {
+            "total": role_counts[r],
+            "categories": [
+                {"name": c, "count": n, "share": round(n / role_counts[r], 4)}
+                for c, n in role_category[r].most_common()
+            ],
+        }
+        for r in sorted(role_counts, key=lambda x: -role_counts[x])
+    }
 
     dated = [m.dt for m in messages if m.dt]
     date_range = (
@@ -433,7 +502,9 @@ def build_stats(
             "question_ratio": round(total_q / len(messages), 4) if messages else 0.0,
             "participants": len({m.author for m in messages}),
             "spaces": sorted({m.space for m in messages}),
+            "by_kind": dict(kind_counts),
         },
+        "by_role": role_breakdown,
         "date_range": date_range,
         "categories": [
             {
@@ -485,7 +556,11 @@ def print_report(stats: dict[str, Any]) -> None:
     print(f"  群組       : {', '.join(t['spaces']) or '(none)'}")
     print(f"  期間       : {dr['start'] or '?'} ~ {dr['end'] or '?'}")
     print(f"  總訊息數   : {t['messages']:,}")
-    print(f"  問題訊息數 : {t['questions']:,} ({t['question_ratio']:.1%})")
+    print(f"  需回應訊息 : {t['questions']:,} ({t['question_ratio']:.1%})")
+    kinds = t.get("by_kind") or {}
+    if kinds:
+        detail = "、".join(f"{k} {v:,}" for k, v in sorted(kinds.items()))
+        print(f"               └ {detail}")
     print(f"  參與人數   : {t['participants']:,}")
     print(f"  中文斷詞   : {stats['tokenizer']}")
     print()
@@ -516,6 +591,15 @@ def print_report(stats: dict[str, Any]) -> None:
         print("── 未分類問題裡的高頻關鍵字（建議加進規則檔） " + "─" * 16)
         print_chips(stats["discovered_keywords_uncategorized"][:20])
         print()
+
+    by_role = stats.get("by_role") or {}
+    if by_role:
+        print("── 依發話單位拆分（各單位問最多的前 5 類） " + "─" * 18)
+        for role, data in by_role.items():
+            print(f"  ▸ {role}（{data['total']:,} 則）")
+            for c in data["categories"][:5]:
+                print(f"      {_pad(c['name'], 22)} {c['count']:>5}  {c['share']:>6.1%}")
+            print()
 
     print("── 最常發問的人 " + "─" * 45)
     for i, a in enumerate(stats["top_askers"][:10], 1):
@@ -549,6 +633,7 @@ body {
 .wrap { max-width: 940px; margin: 0 auto; }
 h1 { font-size: 1.9rem; margin: 0 0 .3rem; letter-spacing: -.02em; }
 h2 { font-size: 1.15rem; margin: 2.75rem 0 .9rem; letter-spacing: -.01em; }
+h3 { font-size: .95rem; margin: 1.6rem 0 .5rem; font-weight: 600; }
 .sub { color: var(--muted); font-size: .9rem; margin: 0 0 2rem; }
 .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: .75rem; }
 .card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: .9rem 1rem; }
@@ -683,6 +768,35 @@ def render_html(stats: dict[str, Any]) -> str:
             f"<span class='rank'>({c['count']})</span></summary>{quotes}</details>"
         )
 
+    by_role = stats.get("by_role") or {}
+    role_section = ""
+    if by_role:
+        blocks = []
+        for role, data in by_role.items():
+            if data["total"] < 20:
+                continue  # 樣本太少，比例沒有意義
+            top = data["categories"][:8]
+            peak = max((c["share"] for c in top), default=0)
+            rows = "".join(
+                f"<tr><td>{html.escape(c['name'])}</td>"
+                f"<td class='num'>{c['count']:,}</td>"
+                f"<td class='num'>{c['share']:.1%}</td>"
+                f"<td class='barcell'><div class='bartrack'><div class='bar' "
+                f"style='width:{(c['share'] / peak * 100) if peak else 0:.1f}%'>"
+                f"</div></div></td></tr>"
+                for c in top
+            )
+            blocks.append(
+                f"<h3>{html.escape(role)} <span class='rank'>"
+                f"（{data['total']:,} 則）</span></h3>"
+                f"<div class='scroll'><table><tbody>{rows}</tbody></table></div>"
+            )
+        role_section = (
+            "<h2>誰在問什麼</h2>"
+            "<p class='sub'>依發話者所屬單位拆分。工程提出的，多半要技術客服回覆；"
+            "技術客服提出的，多半要工程回覆。</p>" + "".join(blocks)
+        )
+
     uncat = next((c for c in cats if c["name"] == UNCATEGORIZED), None)
     uncat_note = ""
     if uncat and uncat["share"] > 0.3:
@@ -704,8 +818,9 @@ def render_html(stats: dict[str, Any]) -> str:
 
   <div class="cards">
     <div class="card"><div class="n">{t['messages']:,}</div><div class="l">總訊息</div></div>
-    <div class="card"><div class="n">{t['questions']:,}</div><div class="l">問題訊息</div></div>
-    <div class="card"><div class="n">{t['question_ratio']:.0%}</div><div class="l">提問比例</div></div>
+    <div class="card"><div class="n">{t['questions']:,}</div><div class="l">需回應訊息</div></div>
+    <div class="card"><div class="n">{t.get('by_kind', {}).get('問題', 0):,}</div><div class="l">其中：提問</div></div>
+    <div class="card"><div class="n">{t.get('by_kind', {}).get('請求', 0):,}</div><div class="l">其中：請求協助</div></div>
     <div class="card"><div class="n">{t['participants']:,}</div><div class="l">參與人數</div></div>
   </div>
 
@@ -727,6 +842,8 @@ def render_html(stats: dict[str, Any]) -> str:
   <p class="sub">這些是規則沒抓到的詞。挑有意義的加進規則檔，就能長出新分類。</p>
   {chips(stats['discovered_keywords_uncategorized'][:25])}
 
+  {role_section}
+
   <h2>最常發問的人</h2>
   <div class="scroll"><table>
     <thead><tr><th></th><th>成員</th><th class="num">提問數</th><th class="num">佔比</th><th></th></tr></thead>
@@ -740,20 +857,27 @@ def render_html(stats: dict[str, Any]) -> str:
 
 
 def write_questions_csv(
-    messages: list[Message], rules: dict[str, list[str]], path: Path
+    messages: list[Message],
+    rules: dict[str, list[str]],
+    path: Path,
+    roles: dict[str, list[str]] | None = None,
 ) -> int:
+    roles = roles or {}
     rows = 0
     with path.open("w", newline="", encoding="utf-8-sig") as fh:
         writer = csv.writer(fh)
-        writer.writerow(["date", "space", "author", "categories", "text"])
+        writer.writerow(["date", "space", "author", "role", "kind", "categories", "text"])
         for msg in messages:
-            if not is_question(msg.text):
+            kind = classify_kind(msg.text)
+            if not kind:
                 continue
             writer.writerow(
                 [
                     msg.dt.strftime("%Y-%m-%d %H:%M") if msg.dt else msg.raw_date,
                     msg.space,
                     msg.author,
+                    role_of(msg.author, roles),
+                    kind,
                     "|".join(categorize(msg.text, rules)),
                     msg.text.replace("\n", " "),
                 ]
@@ -776,6 +900,10 @@ def main() -> int:
         help="Takeout 的 zip 檔、解壓後的資料夾，或單一 messages.json",
     )
     parser.add_argument("--rules", help="分類規則 JSON 檔；不給就用內建的起步規則")
+    parser.add_argument(
+        "--roles",
+        help="角色對照表 JSON：{角色: [出現在發話者名字裡的字串]}，用來拆分不同單位的提問",
+    )
     parser.add_argument("--space", help="只分析名稱含此字串的群組")
     parser.add_argument("--out-dir", default="output", help="輸出目錄（預設 output/）")
     parser.add_argument(
@@ -789,6 +917,7 @@ def main() -> int:
         return 1
 
     rules = load_rules(Path(args.rules).expanduser() if args.rules else None)
+    roles = load_roles(Path(args.roles).expanduser() if args.roles else None)
 
     print(f"[1/4] 讀取 {input_path} ...", file=sys.stderr)
     messages = load_messages(input_path, args.space)
@@ -801,8 +930,8 @@ def main() -> int:
         return 1
     print(f"        讀到 {len(messages):,} 則訊息", file=sys.stderr)
 
-    print("[2/4] 判定問題並分類 ...", file=sys.stderr)
-    stats = build_stats(messages, rules, args.examples)
+    print("[2/4] 判定問題／請求並分類 ...", file=sys.stderr)
+    stats = build_stats(messages, rules, args.examples, roles)
 
     out_dir = Path(args.out_dir).expanduser()
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -811,7 +940,7 @@ def main() -> int:
     (out_dir / "stats.json").write_text(
         json.dumps(stats, ensure_ascii=False, indent=2), encoding="utf-8"
     )
-    n_csv = write_questions_csv(messages, rules, out_dir / "questions.csv")
+    n_csv = write_questions_csv(messages, rules, out_dir / "questions.csv", roles)
     (out_dir / "report.html").write_text(render_html(stats), encoding="utf-8")
 
     print("[4/4] 完成", file=sys.stderr)
