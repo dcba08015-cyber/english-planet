@@ -606,64 +606,186 @@ def print_report(stats: dict[str, Any]) -> None:
         print(f"  {i:2}. {_pad(a['author'], 26)} {a['count']:>5}")
     print()
 
-
 REPORT_CSS = """
 :root {
-  --bg: #fbfaf8; --surface: #ffffff; --border: #e6e2dc; --text: #1c1a17;
-  --muted: #6d6862; --accent: #b8552e; --accent-soft: #f0dcd2; --grid: #efece7;
+  --ground:    #eef1f4;
+  --surface:   #ffffff;
+  --surface-2: #f6f8fa;
+  --ink:       #101820;
+  --muted:     #5a6975;
+  --rule:      #d7dee4;
+  --grid:      #e5eaee;
+  --eng:       #a85820;
+  --sup:       #0d6b78;
+  --neutral:   #7b8996;
+  --accent:    #0d6b78;
 }
-:root:not([data-theme="light"]) { }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #16150f; --surface: #201e18; --border: #35322a; --text: #eeeae2;
-    --muted: #a09a90; --accent: #e08b5f; --accent-soft: #3a291f; --grid: #2b2822;
+    --ground:    #0e1418;
+    --surface:   #161e24;
+    --surface-2: #1b242b;
+    --ink:       #e6ecf0;
+    --muted:     #8fa0ad;
+    --rule:      #2a353e;
+    --grid:      #212c34;
+    --eng:       #d9884a;
+    --sup:       #4bb3c0;
+    --neutral:   #6e7f8c;
+    --accent:    #4bb3c0;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #16150f; --surface: #201e18; --border: #35322a; --text: #eeeae2;
-  --muted: #a09a90; --accent: #e08b5f; --accent-soft: #3a291f; --grid: #2b2822;
+  --ground:    #0e1418;
+  --surface:   #161e24;
+  --surface-2: #1b242b;
+  --ink:       #e6ecf0;
+  --muted:     #8fa0ad;
+  --rule:      #2a353e;
+  --grid:      #212c34;
+  --eng:       #d9884a;
+  --sup:       #4bb3c0;
+  --neutral:   #6e7f8c;
+  --accent:    #4bb3c0;
 }
+
 * { box-sizing: border-box; }
+
 body {
-  margin: 0; padding: 2rem 1.25rem 5rem; background: var(--bg); color: var(--text);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans TC",
-               "PingFang TC", "Microsoft JhengHei", sans-serif;
-  line-height: 1.6; -webkit-font-smoothing: antialiased;
+  margin: 0;
+  padding: 2.5rem 1.25rem 6rem;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: "PingFang TC", "Noto Sans TC", "Microsoft JhengHei",
+               -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 15px;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
 }
-.wrap { max-width: 940px; margin: 0 auto; }
-h1 { font-size: 1.9rem; margin: 0 0 .3rem; letter-spacing: -.02em; }
-h2 { font-size: 1.15rem; margin: 2.75rem 0 .9rem; letter-spacing: -.01em; }
-h3 { font-size: .95rem; margin: 1.6rem 0 .5rem; font-weight: 600; }
-.sub { color: var(--muted); font-size: .9rem; margin: 0 0 2rem; }
-.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: .75rem; }
-.card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: .9rem 1rem; }
-.card .n { font-size: 1.6rem; font-weight: 650; letter-spacing: -.02em; }
-.card .l { font-size: .78rem; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
-table { width: 100%; border-collapse: collapse; font-size: .92rem; }
+
+.wrap { max-width: 1000px; margin: 0 auto; display: flex; flex-direction: column; gap: 3rem; }
+
+.num, .stat-n, td.num, .chip b {
+  font-family: ui-monospace, "SF Mono", "Cascadia Mono", Consolas, monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- header --- */
+header { display: flex; flex-direction: column; gap: .5rem; }
+.eyebrow {
+  font-size: .7rem; letter-spacing: .16em; text-transform: uppercase;
+  color: var(--muted); font-weight: 600;
+}
+h1 { font-size: 1.75rem; line-height: 1.25; margin: 0; text-wrap: balance; letter-spacing: -.015em; }
+.meta {
+  font-family: ui-monospace, "SF Mono", Consolas, monospace;
+  font-size: .8rem; color: var(--muted); font-variant-numeric: tabular-nums;
+}
+
+h2 {
+  font-size: 1.05rem; margin: 0 0 .25rem; letter-spacing: -.01em;
+  padding-bottom: .5rem; border-bottom: 2px solid var(--ink);
+}
+h3 { font-size: .9rem; margin: 0; font-weight: 650; }
+section { display: flex; flex-direction: column; gap: .9rem; }
+.lede { margin: 0; color: var(--muted); font-size: .88rem; max-width: 64ch; }
+
+/* --- stat strip --- */
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1px;
+         background: var(--rule); border: 1px solid var(--rule); }
+.stat { background: var(--surface); padding: 1rem 1.1rem; display: flex; flex-direction: column; gap: .15rem; }
+.stat-n { font-size: 1.55rem; font-weight: 600; line-height: 1.1; letter-spacing: -.02em; }
+.stat-l { font-size: .72rem; color: var(--muted); letter-spacing: .05em; }
+
+/* --- role comparison: the centrepiece --- */
+.roles { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.25rem; }
+.role {
+  background: var(--surface); border: 1px solid var(--rule);
+  border-top: 3px solid var(--role-color, var(--neutral));
+  padding: 1.1rem 1.2rem; display: flex; flex-direction: column; gap: .85rem;
+}
+.role-head { display: flex; align-items: baseline; justify-content: space-between; gap: .75rem; }
+.role-head .count { font-size: .78rem; color: var(--muted); }
+.role-answer {
+  font-size: .74rem; color: var(--muted); padding: .35rem .6rem;
+  background: var(--surface-2); border-left: 2px solid var(--role-color, var(--neutral));
+}
+.rowlist { display: flex; flex-direction: column; gap: .55rem; }
+.row { display: grid; grid-template-columns: 1fr auto; gap: .15rem .75rem; align-items: baseline; }
+.row .label { font-size: .85rem; }
+.row .val { font-size: .78rem; color: var(--muted); }
+.track { grid-column: 1 / -1; height: 6px; background: var(--grid); }
+.fill { height: 100%; background: var(--role-color, var(--accent)); }
+
+/* --- tables --- */
 .scroll { overflow-x: auto; }
-th { text-align: left; font-weight: 600; font-size: .78rem; color: var(--muted);
-     text-transform: uppercase; letter-spacing: .06em; padding: .5rem .6rem;
-     border-bottom: 1px solid var(--border); white-space: nowrap; }
-td { padding: .55rem .6rem; border-bottom: 1px solid var(--grid); vertical-align: middle; }
-td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.barcell { width: 45%; min-width: 140px; }
-.bar { height: 9px; border-radius: 5px; background: var(--accent); }
-.bartrack { background: var(--accent-soft); border-radius: 5px; }
-.rank { color: var(--muted); font-variant-numeric: tabular-nums; width: 2rem; }
+table { width: 100%; border-collapse: collapse; font-size: .88rem; background: var(--surface); }
+th {
+  text-align: left; font-size: .7rem; color: var(--muted); font-weight: 600;
+  letter-spacing: .08em; text-transform: uppercase; padding: .6rem .7rem;
+  border-bottom: 1px solid var(--ink); white-space: nowrap;
+}
+td { padding: .55rem .7rem; border-bottom: 1px solid var(--grid); }
+td.num { text-align: right; white-space: nowrap; }
+td.rank { color: var(--muted); width: 2.2rem; font-family: ui-monospace, Consolas, monospace; }
+.barcell { width: 40%; min-width: 130px; }
+.bartrack { height: 7px; background: var(--grid); }
+.bar { height: 100%; background: var(--accent); }
+
+/* --- keyword chips --- */
 .chips { display: flex; flex-wrap: wrap; gap: .4rem; }
-.chip { background: var(--surface); border: 1px solid var(--border); border-radius: 999px;
-        padding: .28rem .7rem; font-size: .85rem; }
-.chip b { color: var(--accent); font-weight: 600; }
-details { background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
-          padding: .7rem .95rem; margin-bottom: .6rem; }
-summary { cursor: pointer; font-weight: 600; font-size: .95rem; }
-blockquote { margin: .7rem 0 0; padding: .5rem .8rem; border-left: 3px solid var(--accent-soft);
-             color: var(--muted); font-size: .88rem; }
-blockquote .meta { display: block; font-size: .75rem; opacity: .8; margin-bottom: .15rem; }
-.note { background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--accent);
-        border-radius: 8px; padding: .8rem 1rem; font-size: .88rem; color: var(--muted); }
+.chip {
+  background: var(--surface); border: 1px solid var(--rule);
+  padding: .3rem .65rem; font-size: .82rem; display: inline-flex; gap: .45rem;
+}
+.chip b { color: var(--accent); font-weight: 600; font-size: .78rem; }
+
+/* --- examples --- */
+details { background: var(--surface); border: 1px solid var(--rule); }
+details + details { border-top: none; }
+summary {
+  cursor: pointer; padding: .7rem .9rem; font-size: .88rem; font-weight: 600;
+  display: flex; justify-content: space-between; gap: 1rem;
+}
+summary::-webkit-details-marker { display: none; }
+summary .c { color: var(--muted); font-weight: 400; font-size: .8rem;
+             font-family: ui-monospace, Consolas, monospace; }
+summary:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.quotes { padding: 0 .9rem .9rem; display: flex; flex-direction: column; gap: .6rem; }
+blockquote {
+  margin: 0; padding: .5rem .75rem; background: var(--surface-2);
+  border-left: 2px solid var(--rule); font-size: .85rem;
+}
+blockquote .who {
+  display: block; font-size: .7rem; color: var(--muted); margin-bottom: .2rem;
+  font-family: ui-monospace, Consolas, monospace;
+}
+
+.note {
+  background: var(--surface); border: 1px solid var(--rule);
+  border-left: 3px solid var(--accent); padding: .8rem 1rem;
+  font-size: .85rem; color: var(--muted);
+}
+.note b { color: var(--ink); }
 svg { display: block; max-width: 100%; }
 """
+
+
+def _role_color(role: str) -> str:
+    if "技術客服" in role or "技客" in role:
+        return "var(--sup)"
+    if "工程" in role:
+        return "var(--eng)"
+    return "var(--neutral)"
+
+
+def _role_answers(role: str) -> str:
+    """這個單位提出的事，通常由誰接手回覆。"""
+    if "技術客服" in role or "技客" in role:
+        return "多半需要 工程 回覆"
+    if "工程" in role:
+        return "多半需要 技術客服 回覆"
+    return ""
 
 
 def _bar_row(rank: int, label: str, count: int, share: float, max_share: float) -> str:
@@ -681,181 +803,187 @@ def _bar_row(rank: int, label: str, count: int, share: float, max_share: float) 
 def _trend_svg(monthly: list[dict[str, Any]]) -> str:
     points = [m for m in monthly if m["month"] != "unknown"]
     if len(points) < 2:
-        return "<p class='sub'>資料期間不足，略過趨勢圖。</p>"
+        return "<p class='lede'>資料期間不足，略過趨勢圖。</p>"
 
-    w, h, pad_l, pad_b, pad_t = 900, 220, 40, 34, 12
+    w, h, pad_l, pad_b, pad_t = 940, 210, 44, 32, 10
     max_c = max(p["count"] for p in points) or 1
     n = len(points)
-    slot = (w - pad_l - 10) / n
-    bar_w = max(2.0, slot * 0.62)
+    slot = (w - pad_l - 12) / n
+    bar_w = max(3.0, slot * 0.58)
 
     bars, labels = [], []
-    label_every = max(1, n // 12)
+    label_every = max(1, n // 14)
     for i, p in enumerate(points):
         bh = (p["count"] / max_c) * (h - pad_b - pad_t)
         x = pad_l + i * slot + (slot - bar_w) / 2
         y = h - pad_b - bh
         bars.append(
             f"<rect x='{x:.1f}' y='{y:.1f}' width='{bar_w:.1f}' height='{bh:.1f}' "
-            f"rx='2' fill='var(--accent)'><title>{html.escape(p['month'])}: "
-            f"{p['count']}</title></rect>"
+            f"fill='var(--accent)'><title>{html.escape(p['month'])}: {p['count']}</title></rect>"
         )
         if i % label_every == 0:
             labels.append(
-                f"<text x='{x + bar_w / 2:.1f}' y='{h - pad_b + 15:.0f}' font-size='10' "
-                f"fill='var(--muted)' text-anchor='middle'>{html.escape(p['month'][2:])}</text>"
+                f"<text x='{x + bar_w / 2:.1f}' y='{h - pad_b + 14:.0f}' font-size='9.5' "
+                f"fill='var(--muted)' text-anchor='middle' "
+                f"font-family='ui-monospace, Consolas, monospace'>"
+                f"{html.escape(p['month'])}</text>"
             )
 
     grid = []
     for frac in (0, 0.5, 1.0):
         y = h - pad_b - frac * (h - pad_b - pad_t)
         grid.append(
-            f"<line x1='{pad_l}' y1='{y:.1f}' x2='{w - 10}' y2='{y:.1f}' "
+            f"<line x1='{pad_l}' y1='{y:.1f}' x2='{w - 12}' y2='{y:.1f}' "
             f"stroke='var(--grid)' stroke-width='1'/>"
-            f"<text x='{pad_l - 6}' y='{y + 3:.1f}' font-size='10' fill='var(--muted)' "
-            f"text-anchor='end'>{round(max_c * frac)}</text>"
+            f"<text x='{pad_l - 7}' y='{y + 3.5:.1f}' font-size='9.5' fill='var(--muted)' "
+            f"text-anchor='end' font-family='ui-monospace, Consolas, monospace'>"
+            f"{round(max_c * frac)}</text>"
         )
 
     return (
         f"<div class='scroll'><svg viewBox='0 0 {w} {h}' width='{w}' "
-        f"role='img' aria-label='每月問題數趨勢'>"
+        f"role='img' aria-label='每月需回應訊息數趨勢'>"
         + "".join(grid) + "".join(bars) + "".join(labels) + "</svg></div>"
     )
+
+
+def _role_cards(by_role: dict[str, Any], min_total: int = 20) -> str:
+    cards = []
+    for role, data in by_role.items():
+        if data["total"] < min_total:
+            continue
+        top = [c for c in data["categories"] if c["name"] != UNCATEGORIZED][:6]
+        peak = max((c["share"] for c in top), default=0)
+        rows = "".join(
+            f"<div class='row'>"
+            f"<span class='label'>{html.escape(c['name'])}</span>"
+            f"<span class='val'>{c['count']:,} · {c['share']:.0%}</span>"
+            f"<span class='track'><span class='fill' "
+            f"style='width:{(c['share'] / peak * 100) if peak else 0:.1f}%'></span></span>"
+            f"</div>"
+            for c in top
+        )
+        answer = _role_answers(role)
+        answer_html = f"<p class='role-answer'>{html.escape(answer)}</p>" if answer else ""
+        cards.append(
+            f"<article class='role' style='--role-color: {_role_color(role)}'>"
+            f"<div class='role-head'><h3>{html.escape(role)}</h3>"
+            f"<span class='count num'>{data['total']:,} 則</span></div>"
+            f"{answer_html}<div class='rowlist'>{rows}</div></article>"
+        )
+    return f"<div class='roles'>{''.join(cards)}</div>" if cards else ""
 
 
 def render_html(stats: dict[str, Any]) -> str:
     t = stats["totals"]
     dr = stats["date_range"]
     cats = stats["categories"]
+    kinds = t.get("by_kind") or {}
     max_share = max((c["share"] for c in cats), default=0)
 
     cat_rows = "".join(
         _bar_row(i, c["name"], c["count"], c["share"], max_share)
         for i, c in enumerate(cats, 1)
-    ) or "<tr><td colspan='5'>沒有偵測到問題訊息。</td></tr>"
-
-    max_asker = max((a["count"] for a in stats["top_askers"]), default=0)
-    asker_rows = "".join(
-        _bar_row(
-            i,
-            a["author"],
-            a["count"],
-            a["count"] / t["questions"] if t["questions"] else 0,
-            max_asker / t["questions"] if t["questions"] and max_asker else 0,
-        )
-        for i, a in enumerate(stats["top_askers"][:12], 1)
-    ) or "<tr><td colspan='5'>—</td></tr>"
+    ) or "<tr><td colspan='5'>沒有偵測到需回應的訊息。</td></tr>"
 
     def chips(items: list[dict[str, Any]]) -> str:
         if not items:
-            return "<p class='sub'>—</p>"
+            return "<p class='lede'>—</p>"
         return "<div class='chips'>" + "".join(
-            f"<span class='chip'>{html.escape(k['keyword'])} <b>{k['count']}</b></span>"
+            f"<span class='chip'>{html.escape(k['keyword'])}<b>{k['count']:,}</b></span>"
             for k in items
         ) + "</div>"
 
     example_blocks = []
     for c in cats:
-        if not c["examples"]:
+        if not c["examples"] or c["name"] == UNCATEGORIZED:
             continue
         quotes = "".join(
-            f"<blockquote><span class='meta'>{html.escape(e['date'])} · "
+            f"<blockquote><span class='who'>{html.escape(e['date'])} · "
             f"{html.escape(e['author'])}</span>{html.escape(e['text'])}</blockquote>"
             for e in c["examples"]
         )
         example_blocks.append(
-            f"<details><summary>{html.escape(c['name'])} "
-            f"<span class='rank'>({c['count']})</span></summary>{quotes}</details>"
-        )
-
-    by_role = stats.get("by_role") or {}
-    role_section = ""
-    if by_role:
-        blocks = []
-        for role, data in by_role.items():
-            if data["total"] < 20:
-                continue  # 樣本太少，比例沒有意義
-            top = data["categories"][:8]
-            peak = max((c["share"] for c in top), default=0)
-            rows = "".join(
-                f"<tr><td>{html.escape(c['name'])}</td>"
-                f"<td class='num'>{c['count']:,}</td>"
-                f"<td class='num'>{c['share']:.1%}</td>"
-                f"<td class='barcell'><div class='bartrack'><div class='bar' "
-                f"style='width:{(c['share'] / peak * 100) if peak else 0:.1f}%'>"
-                f"</div></div></td></tr>"
-                for c in top
-            )
-            blocks.append(
-                f"<h3>{html.escape(role)} <span class='rank'>"
-                f"（{data['total']:,} 則）</span></h3>"
-                f"<div class='scroll'><table><tbody>{rows}</tbody></table></div>"
-            )
-        role_section = (
-            "<h2>誰在問什麼</h2>"
-            "<p class='sub'>依發話者所屬單位拆分。工程提出的，多半要技術客服回覆；"
-            "技術客服提出的，多半要工程回覆。</p>" + "".join(blocks)
+            f"<details><summary>{html.escape(c['name'])}"
+            f"<span class='c'>{c['count']:,}</span></summary>"
+            f"<div class='quotes'>{quotes}</div></details>"
         )
 
     uncat = next((c for c in cats if c["name"] == UNCATEGORIZED), None)
     uncat_note = ""
-    if uncat and uncat["share"] > 0.3:
+    if uncat and uncat["share"] > 0.2:
         uncat_note = (
-            f"<p class='note'>有 <b>{uncat['share']:.0%}</b> 的問題落在「未分類」。"
-            f"看下面「未分類問題的高頻關鍵字」，把它們補進規則檔（<code>--rules</code>）"
-            f"再跑一次，分類會準很多。</p>"
+            f"<p class='note'>「未分類」佔 <b>{uncat['share']:.0%}</b>。其中大部分是"
+            f"「幫確認」「再麻煩你」這類沒有主題的純回應請求，本來就無從歸類；"
+            f"其餘可從下方關鍵字挑詞補進規則檔再跑一次。</p>"
         )
 
-    return f"""<title>Google Chat 群組常見問題統計</title>
+    role_section = ""
+    cards = _role_cards(stats.get("by_role") or {})
+    if cards:
+        role_section = f"""
+  <section>
+    <h2>誰在問，誰要回</h2>
+    <p class="lede">依發話者所屬單位拆分。一個單位提出的事，通常由對方單位接手處理，
+       所以這張對照表就是各單位實際承接的工作型態。已排除「未分類」。</p>
+    {cards}
+  </section>"""
+
+    return f"""<title>技術客服與工程協作分析</title>
 <style>{REPORT_CSS}</style>
 <div class="wrap">
-  <h1>群組常見問題統計</h1>
-  <p class="sub">
-    {html.escape(', '.join(t['spaces']) or '未知群組')} ·
-    {dr['start'] or '?'} 至 {dr['end'] or '?'} ·
-    產生於 {stats['generated_at']}
-  </p>
 
-  <div class="cards">
-    <div class="card"><div class="n">{t['messages']:,}</div><div class="l">總訊息</div></div>
-    <div class="card"><div class="n">{t['questions']:,}</div><div class="l">需回應訊息</div></div>
-    <div class="card"><div class="n">{t.get('by_kind', {}).get('問題', 0):,}</div><div class="l">其中：提問</div></div>
-    <div class="card"><div class="n">{t.get('by_kind', {}).get('請求', 0):,}</div><div class="l">其中：請求協助</div></div>
-    <div class="card"><div class="n">{t['participants']:,}</div><div class="l">參與人數</div></div>
-  </div>
+  <header>
+    <span class="eyebrow">Google Chat 群組分析</span>
+    <h1>{html.escape(', '.join(t['spaces']) or '未知群組')}</h1>
+    <span class="meta">{dr['start'] or '?'} — {dr['end'] or '?'} ·
+      {t['participants']} 位成員 · 產生於 {stats['generated_at']}</span>
+  </header>
 
-  <h2>問題分類排名</h2>
-  <p class="sub">一則訊息可同時命中多個分類，因此佔比加總可能超過 100%。</p>
-  {uncat_note}
-  <div class="scroll"><table>
-    <thead><tr><th></th><th>分類</th><th class="num">次數</th><th class="num">佔比</th><th></th></tr></thead>
-    <tbody>{cat_rows}</tbody>
-  </table></div>
+  <section>
+    <div class="stats">
+      <div class="stat"><span class="stat-n">{t['messages']:,}</span>
+        <span class="stat-l">總訊息</span></div>
+      <div class="stat"><span class="stat-n">{t['questions']:,}</span>
+        <span class="stat-l">需要有人回應</span></div>
+      <div class="stat"><span class="stat-n">{kinds.get('問題', 0):,}</span>
+        <span class="stat-l">其中：提問</span></div>
+      <div class="stat"><span class="stat-n">{kinds.get('請求', 0):,}</span>
+        <span class="stat-l">其中：請求協助</span></div>
+    </div>
+  </section>
+{role_section}
 
-  <h2>每月提問量趨勢</h2>
-  {_trend_svg(stats['monthly'])}
+  <section>
+    <h2>問題類型排名</h2>
+    <p class="lede">一則訊息可同時命中多個類型，因此佔比加總會超過 100%。</p>
+    {uncat_note}
+    <div class="scroll"><table>
+      <thead><tr><th></th><th>類型</th><th class="num">則數</th>
+        <th class="num">佔比</th><th></th></tr></thead>
+      <tbody>{cat_rows}</tbody>
+    </table></div>
+  </section>
 
-  <h2>自動發現的高頻關鍵字</h2>
-  {chips(stats['discovered_keywords_all'][:30])}
+  <section>
+    <h2>每月需回應訊息量</h2>
+    {_trend_svg(stats['monthly'])}
+  </section>
 
-  <h2>未分類問題的高頻關鍵字</h2>
-  <p class="sub">這些是規則沒抓到的詞。挑有意義的加進規則檔，就能長出新分類。</p>
-  {chips(stats['discovered_keywords_uncategorized'][:25])}
+  <section>
+    <h2>高頻詞</h2>
+    <p class="lede">從需回應的訊息裡自動抽出，每則訊息同一個詞只計一次。</p>
+    {chips(stats['discovered_keywords_all'][:32])}
+  </section>
 
-  {role_section}
+  <section>
+    <h2>各類型的實際原文</h2>
+    <p class="lede">用來檢查分類準不準。點開看該類型的代表性訊息。</p>
+    {''.join(example_blocks) or "<p class='lede'>—</p>"}
+  </section>
 
-  <h2>最常發問的人</h2>
-  <div class="scroll"><table>
-    <thead><tr><th></th><th>成員</th><th class="num">提問數</th><th class="num">佔比</th><th></th></tr></thead>
-    <tbody>{asker_rows}</tbody>
-  </table></div>
-
-  <h2>各分類的代表性原文</h2>
-  {''.join(example_blocks) or "<p class='sub'>—</p>"}
 </div>
 """
-
-
 def write_questions_csv(
     messages: list[Message],
     rules: dict[str, list[str]],
