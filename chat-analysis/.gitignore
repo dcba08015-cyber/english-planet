@@ -1,0 +1,15 @@
+# Python 執行時產生的暫存檔
+__pycache__/
+*.pyc
+
+# 分析產出與聊天資料，不應進版控
+output/
+chat-json/
+chat-json.zip
+*.json.bak
+
+# 匯出的原始資料（可能很大，且含群組對話內容）
+Takeout/
+takeout*.zip
+messages.json
+group_info.json
