@@ -28,6 +28,8 @@ var END_MONTH = '';          // 留空 = 抓到這個月為止
 
 var PAGE_SIZE = 500;         // 每頁筆數。記憶體不足時可再調小
 var TIME_BUDGET_MS = 4.5 * 60 * 1000;   // 留安全餘裕，避免被 6 分鐘硬砍
+                                        // 實測一個月約需 60 秒，所以一次大約
+                                        // 跑 4~5 個月，要按兩次執行才會跑完
 
 var PROGRESS_KEY = 'chatFetchDone_' + SPACE_ID;
 
@@ -154,12 +156,10 @@ function fetchOneMonth(month) {
   var filename = 'chat-' + month + '.json';
   var payload = JSON.stringify({ messages: out });
 
-  // 同名檔案先移除，避免重跑時留下多份
-  var existing = DriveApp.getFilesByName(filename);
-  while (existing.hasNext()) {
-    existing.next().setTrashed(true);
-  }
-
+  // 只用 DriveApp.createFile，因為它只需要 drive.file 權限（僅能操作本腳本
+  // 建立的檔案）。查詢或刪除既有檔案要 drive.readonly 以上，等於讓腳本讀得到
+  // 你整個雲端硬碟，為了清同名舊檔而放寬到那個程度並不值得。
+  // 若執行過 resetProgress 重抓，請自行把舊的 chat-*.json 刪掉再跑。
   DriveApp.createFile(filename, payload, MimeType.PLAIN_TEXT);
 
   var count = out.length;
