@@ -813,6 +813,25 @@ blockquote .who {
   font-family: ui-monospace, Consolas, monospace;
 }
 
+.summary {
+  background: var(--surface); border: 1px solid var(--rule);
+  border-left: 3px solid var(--accent); padding: 1.4rem 1.6rem;
+  display: flex; flex-direction: column; gap: .1rem;
+}
+.summary h2 { border-bottom: none; padding-bottom: 0; margin-bottom: .6rem; }
+.summary h3 {
+  font-size: .82rem; letter-spacing: .06em; text-transform: uppercase;
+  color: var(--muted); margin: 1.4rem 0 .3rem;
+}
+.summary h3:first-of-type { margin-top: 0; }
+.summary p { margin: 0 0 .7rem; max-width: 68ch; }
+.summary ul { margin: 0 0 .7rem; padding-left: 1.1rem; max-width: 68ch; }
+.summary li { margin-bottom: .25rem; }
+.summary blockquote {
+  margin: 0 0 .7rem; font-size: .85rem; border-left: 2px solid var(--accent);
+  background: var(--surface-2); padding: .55rem .8rem;
+}
+
 td.delta { font-weight: 600; }
 td.delta.up { color: var(--eng); }
 td.delta.down { color: var(--sup); }
@@ -931,6 +950,69 @@ def _role_cards(by_role: dict[str, Any], min_total: int = 20) -> str:
     return f"<div class='roles'>{''.join(cards)}</div>" if cards else ""
 
 
+_MD_BOLD = re.compile(r"\*\*(.+?)\*\*")
+
+
+def render_summary(markdown: str) -> str:
+    """把重點發現的 Markdown 轉成報告開頭的區塊。
+
+    刻意只支援最小語法：## 小標、> 引言、- 條列、**粗體**、空行分段。
+    結論是人寫的判斷，不是統計能推導出來的，所以由外部檔案供稿，
+    工具只負責排版。
+    """
+    if not markdown.strip():
+        return ""
+
+    def inline(text: str) -> str:
+        return _MD_BOLD.sub(r"<strong>\1</strong>", html.escape(text.strip()))
+
+    out: list[str] = []
+    buf: list[str] = []
+    mode: str | None = None
+
+    def flush() -> None:
+        nonlocal buf, mode
+        if not buf:
+            return
+        if mode == "quote":
+            out.append("<blockquote>" + "<br>".join(buf) + "</blockquote>")
+        elif mode == "list":
+            out.append("<ul>" + "".join(f"<li>{x}</li>" for x in buf) + "</ul>")
+        else:
+            out.append("<p>" + "<br>".join(buf) + "</p>")
+        buf = []
+        mode = None
+
+    for raw in markdown.splitlines():
+        line = raw.rstrip()
+        if not line.strip():
+            flush()
+            continue
+        if line.startswith("## "):
+            flush()
+            out.append(f"<h3>{inline(line[3:])}</h3>")
+        elif line.startswith("> "):
+            if mode != "quote":
+                flush()
+                mode = "quote"
+            buf.append(inline(line[2:]))
+        elif line.startswith("- "):
+            if mode != "list":
+                flush()
+                mode = "list"
+            buf.append(inline(line[2:]))
+        else:
+            if mode not in (None, "para"):
+                flush()
+            mode = "para"
+            buf.append(inline(line))
+    flush()
+
+    return (
+        "<section class='summary'><h2>重點發現</h2>" + "".join(out) + "</section>"
+    )
+
+
 def _compare_section(stats: dict[str, Any]) -> str:
     """把這一期與前一期的分類佔比並列，標出增減幅度。"""
     cmp = stats.get("compare")
@@ -1025,6 +1107,8 @@ def render_html(stats: dict[str, Any]) -> str:
             f"其餘可從下方關鍵字挑詞補進規則檔再跑一次。</p>"
         )
 
+    summary_section = render_summary(stats.get("summary") or "")
+
     target_section = ""
     tcards = _role_cards(stats.get("by_target") or {}, min_total=50)
     if tcards:
@@ -1073,6 +1157,7 @@ def render_html(stats: dict[str, Any]) -> str:
         <span class="stat-l">其中：請求協助</span></div>
     </div>
   </section>
+{summary_section}
 {target_section}
 {role_section}
 
@@ -1156,6 +1241,11 @@ def main() -> int:
         help="角色對照表 JSON：{角色: [出現在發話者名字裡的字串]}，用來拆分不同單位的提問",
     )
     parser.add_argument(
+        "--summary",
+        help="重點發現的 Markdown 檔，會排在報告最前面。報告要給別人看時，"
+             "結論必須寫在報告裡，而不是只留在分析者的腦袋或對話紀錄裡",
+    )
+    parser.add_argument(
         "--compare",
         help="先前一次執行的 stats.json，用來在報告裡並列兩期的分類佔比變化",
     )
@@ -1193,6 +1283,9 @@ def main() -> int:
 
     print("[2/4] 判定問題／請求並分類 ...", file=sys.stderr)
     stats = build_stats(messages, rules, args.examples, roles, targets)
+
+    if args.summary:
+        stats["summary"] = Path(args.summary).expanduser().read_text(encoding="utf-8")
 
     if args.compare:
         with Path(args.compare).expanduser().open(encoding="utf-8") as fh:
