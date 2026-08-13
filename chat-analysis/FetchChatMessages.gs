@@ -127,7 +127,7 @@ function fetchOneMonth(month) {
       params.pageToken = pageToken;
     }
 
-    var res = Chat.Spaces.Messages.list('spaces/' + SPACE_ID, params);
+    var res = listWithRetry('spaces/' + SPACE_ID, params);
     var msgs = res.messages || [];
 
     for (var i = 0; i < msgs.length; i++) {
@@ -172,6 +172,45 @@ function fetchOneMonth(month) {
   out = null;
   payload = null;
   return { count: count, filename: filename };
+}
+
+
+/**
+ * 包一層重試。Chat API 偶爾回「Internal error. Retry the request later.」
+ * 這類伺服器端的暫時性故障，等一下再打通常就過了，不該讓整批中斷。
+ * 每次等待時間加倍，最多重試 4 次（2+4+8+16 秒）。
+ */
+function listWithRetry(parent, params) {
+  var delay = 2000;
+
+  for (var attempt = 1; attempt <= 5; attempt++) {
+    try {
+      return Chat.Spaces.Messages.list(parent, params);
+    } catch (e) {
+      var msg = String((e && e.message) || e);
+      var transient =
+        msg.indexOf('Internal error') !== -1 ||
+        msg.indexOf('backendError') !== -1 ||
+        msg.indexOf('rateLimit') !== -1 ||
+        msg.indexOf('Rate Limit') !== -1 ||
+        msg.indexOf('Quota') !== -1 ||
+        msg.indexOf('try again') !== -1 ||
+        msg.indexOf('Try again') !== -1 ||
+        msg.indexOf('Retry') !== -1 ||
+        msg.indexOf('503') !== -1 ||
+        msg.indexOf('500') !== -1 ||
+        msg.indexOf('429') !== -1;
+
+      if (!transient || attempt === 5) {
+        throw e;
+      }
+
+      Logger.log('    伺服器暫時性錯誤，' + (delay / 1000) + ' 秒後重試（第 ' +
+                 attempt + ' 次）');
+      Utilities.sleep(delay);
+      delay *= 2;
+    }
+  }
 }
 
 
