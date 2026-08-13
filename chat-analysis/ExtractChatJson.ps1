@@ -35,6 +35,11 @@ param(
     # Only list the groups; extract nothing
     [switch]$List,
 
+    # Show every archive entry belonging to the matched group, with sizes and
+    # which archive each one came from. Use this to check whether a group's
+    # messages were split across several Takeout parts.
+    [switch]$Inspect,
+
     # Where to write the result; defaults to <source folder>\chat-json
     [string]$OutDir = ""
 )
@@ -169,6 +174,42 @@ if ($wanted.Count -eq 0) {
 Write-Host ""
 Write-Host ("Matched {0} group(s):" -f $wanted.Count) -ForegroundColor Green
 foreach ($w in $wanted) { Write-Host ("  {0}  =  {1}" -f $w, $spaces[$w]) }
+
+# --- Inspect mode: report every entry for the matched group --------------
+if ($Inspect) {
+    Write-Host ""
+    Write-Host "Every archive entry for the matched group(s):" -ForegroundColor Green
+    Write-Host ""
+    Write-Host ("  {0,-34} {1,14}  {2}" -f "ENTRY", "BYTES", "ARCHIVE")
+    Write-Host ("  {0,-34} {1,14}  {2}" -f ("-" * 34), ("-" * 14), ("-" * 30))
+
+    $jsonCount = 0
+    foreach ($z in $zips) {
+        $archive = [System.IO.Compression.ZipFile]::OpenRead($z.FullName)
+        try {
+            foreach ($entry in $archive.Entries) {
+                $folder = Get-SpaceFolder $entry.FullName
+                if ($wanted -notcontains $folder) { continue }
+                if ($entry.Name -notlike "*.json") { continue }
+                $jsonCount++
+                Write-Host ("  {0,-34} {1,14:N0}  {2}" -f $entry.Name, $entry.Length, $z.Name)
+            }
+        } finally {
+            $archive.Dispose()
+        }
+    }
+
+    Write-Host ""
+    if ($jsonCount -gt 2) {
+        Write-Host "More than one messages.json exists for this group." -ForegroundColor Yellow
+        Write-Host "The export is split across parts; send all of them for analysis."
+    } else {
+        Write-Host "Only one messages.json exists, so nothing was skipped." -ForegroundColor Cyan
+        Write-Host "If messages are missing, the export itself is incomplete."
+    }
+    Write-Host ""
+    exit 0
+}
 
 # --- Pass 2: extract the JSON for those groups --------------------------
 $null = New-Item -ItemType Directory -Force -Path $OutDir
