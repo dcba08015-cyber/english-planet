@@ -416,26 +416,78 @@ OTHER_ROLE = "其他／未標註"
 _MENTION_RE = re.compile(r"@([^\s@()（）]{1,12})[（(]([^)）]{1,14})[)）]")
 
 
-def load_targets(path: Path | None) -> dict[str, list[str]]:
-    """讀取收件單位對照表：{單位: [會出現在括號裡的字串, ...]}。"""
+def load_targets(path: Path | None) -> dict[str, dict[str, list[str]]]:
+    """讀取收件單位對照表。
+
+    支援兩種寫法：
+      {"工程": ["工程", "技師"]}                        只比對 @姓名(單位) 的括號
+      {"技術客服": {"mention": [...], "text": [...]}}   另外用內文用語判斷
+
+    需要 text 的原因：這個群組最大宗的客服工作是工程完工後貼「…幫確認」，
+    那類訊息幾乎不 @ 任何人（3,470 則裡有 97.5% 沒有標記），
+    只看 @ 會把客服的承接量少算一個數量級。
+    """
     if path is None:
         return {}
     with path.open(encoding="utf-8") as fh:
-        targets = json.load(fh)
-    return {k: [str(x) for x in v] for k, v in targets.items() if not k.startswith("_")}
+        raw = json.load(fh)
+
+    out: dict[str, dict[str, list[str]]] = {}
+    for name, value in raw.items():
+        if name.startswith("_"):
+            continue
+        if isinstance(value, dict):
+            out[name] = {
+                "mention": [str(x) for x in value.get("mention", [])],
+                "text": [str(x) for x in value.get("text", [])],
+            }
+        else:
+            out[name] = {"mention": [str(x) for x in value], "text": []}
+    return out
 
 
-def mention_targets(text: str, target_map: dict[str, list[str]]) -> list[str]:
-    """回傳這則訊息點名了哪些單位；沒點名任何人回傳空 list。"""
+# 一則訊息常同時點名多個單位，例如
+#   「@李凱晉(台中工程) @黃彥智(技術客服) 此件 d+1 查無能量，再請協助安排」
+# 這是客服發給工程的請求：排在前面的工程是收件人，後面的客服是案件負責人。
+# 若把兩者都算成收件人，客服的「發出量」會被誤計成「承接量」。
+#
+# 用發話者側寫驗證過這條規則：把「只點名工程」的發話者視為客服端、
+# 「只點名客服」的視為工程端，據此判斷同時點名兩者的訊息由誰發出——
+# 2,990 則裡有 2,982 則（99.7%）來自客服端。工程也確實排在前面（99.2%）。
+# 因此只採計第一個被點名的單位。
+BROADCAST_MARKERS = ("值班", "各位同事")
+
+
+def mention_targets(
+    text: str, target_map: dict[str, dict[str, list[str]]]
+) -> list[str]:
+    """回傳這則訊息的收件單位（最多一個）。
+
+    判斷順序：
+      1. @姓名(單位) —— 只採計第一個被點名的單位
+      2. 內文用語 —— 沒有任何 @ 標記時才啟用
+
+    值班公告這類對全群廣播的訊息不算指派給任何人，直接排除。
+    """
     if not target_map:
         return []
-    hits: set[str] = set()
-    for _name, unit in _MENTION_RE.findall(text):
-        for target, markers in target_map.items():
-            if any(marker in unit for marker in markers):
-                hits.add(target)
-                break  # 對照表由上而下，第一個命中的優先
-    return sorted(hits)
+    if any(marker in text for marker in BROADCAST_MARKERS):
+        return []
+
+    mentions = _MENTION_RE.findall(text)
+    for _name, unit in mentions:
+        for target, cfg in target_map.items():
+            if any(marker in unit for marker in cfg["mention"]):
+                return [target]  # 對照表由上而下，第一個命中的優先
+
+    if mentions:
+        return []  # 有點名但不是我們認得的單位，不要再用內文猜
+
+    lowered = text.lower()
+    for target, cfg in target_map.items():
+        if any(kw in text or kw.lower() in lowered for kw in cfg["text"]):
+            return [target]
+    return []
 
 
 def load_roles(path: Path | None) -> dict[str, list[str]]:
