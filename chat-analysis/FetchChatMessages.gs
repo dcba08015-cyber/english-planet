@@ -17,6 +17,13 @@
  * ── 其他函式 ────────────────────────────────────────────────
  *  listSpaces()   列出你所在的所有空間與代號
  *  resetProgress() 清除進度紀錄，讓下次執行從頭重抓
+ *
+ * ── appsscript.json 需要的權限 ──────────────────────────────
+ *   https://www.googleapis.com/auth/chat.messages.readonly
+ *   https://www.googleapis.com/auth/chat.spaces.readonly
+ *   https://www.googleapis.com/auth/drive
+ *
+ *   最後一項不能換成 drive.file —— DriveApp 的寫入一律要完整 drive 權限。
  */
 
 // 【協作】技術客服與全區工程
@@ -156,10 +163,9 @@ function fetchOneMonth(month) {
   var filename = 'chat-' + month + '.json';
   var payload = JSON.stringify({ messages: out });
 
-  // 只用 DriveApp.createFile，因為它只需要 drive.file 權限（僅能操作本腳本
-  // 建立的檔案）。查詢或刪除既有檔案要 drive.readonly 以上，等於讓腳本讀得到
-  // 你整個雲端硬碟，為了清同名舊檔而放寬到那個程度並不值得。
-  // 若執行過 resetProgress 重抓，請自行把舊的 chat-*.json 刪掉再跑。
+  // DriveApp 的任何寫入都需要完整的 drive 權限，drive.file 對它不夠用
+  // （drive.file 只適用於 Drive 進階服務／REST API，不適用 DriveApp）。
+  // 這裡不另外查詢同名舊檔：重跑前請自行把舊的 chat-*.json 刪掉。
   DriveApp.createFile(filename, payload, MimeType.PLAIN_TEXT);
 
   var count = out.length;
