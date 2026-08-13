@@ -243,6 +243,80 @@ function nextMonth(month) {
 
 
 /**
+ * 抓空間成員名單，建立「使用者 ID → 顯示名稱」對照表。
+ *
+ * 為什麼需要這個：訊息 API 回傳的 sender 只有 users/<一長串數字>，
+ * 沒有顯示名稱（chat.messages.readonly 不含讀取使用者資料的權限）。
+ * 少了名稱就無法依單位（技術客服／工程）拆分統計，所以要另外抓一次成員名單。
+ *
+ * 需要在 appsscript.json 的 oauthScopes 加上：
+ *   https://www.googleapis.com/auth/chat.memberships.readonly
+ */
+function fetchMemberNames() {
+  var map = {};
+  var pageToken = null;
+  var named = 0;
+  var total = 0;
+
+  try {
+    do {
+      var params = { pageSize: 1000, showGroups: true, showInvited: true };
+      if (pageToken) {
+        params.pageToken = pageToken;
+      }
+
+      var res = Chat.Spaces.Members.list('spaces/' + SPACE_ID, params);
+      var members = res.memberships || [];
+
+      for (var i = 0; i < members.length; i++) {
+        var m = members[i].member || {};
+        var id = String(m.name || '');
+        if (!id) {
+          continue;
+        }
+        total++;
+        var display = m.displayName || '';
+        if (display) {
+          named++;
+        }
+        map[id] = display || '(名稱不明)';
+      }
+
+      pageToken = res.nextPageToken || null;
+    } while (pageToken);
+  } catch (e) {
+    explainError(e);
+    return;
+  }
+
+  if (total === 0) {
+    Logger.log('讀不到任何成員。');
+    return;
+  }
+
+  DriveApp.createFile('chat-members.json', JSON.stringify(map), MimeType.PLAIN_TEXT);
+
+  Logger.log('成員總數 ' + total + '，其中 ' + named + ' 位有顯示名稱');
+  Logger.log('已存成 chat-members.json');
+  Logger.log('');
+
+  var shown = 0;
+  for (var key in map) {
+    if (shown++ >= 15) {
+      break;
+    }
+    Logger.log('  ' + key + '  ->  ' + map[key]);
+  }
+
+  if (named === 0) {
+    Logger.log('');
+    Logger.log('全部都沒有顯示名稱，代表這個權限也讀不到使用者資料。');
+    Logger.log('把結果告訴我，我改用訊息內容裡的 @提及 來反推對照表。');
+  }
+}
+
+
+/**
  * 清除進度，下次執行從頭重抓。
  */
 function resetProgress() {

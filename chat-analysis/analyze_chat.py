@@ -411,6 +411,32 @@ def discover_keywords(texts: list[str], top_n: int = 30) -> list[tuple[str, int]
 
 OTHER_ROLE = "其他／未標註"
 
+# 群組裡用 @姓名(單位) 的方式點名，例如「@廖麗惠(技術客服)」「@張智鈞(台中工程)」。
+# 括號裡就是對方的單位，據此可以判斷一則訊息是丟給誰處理的。
+_MENTION_RE = re.compile(r"@([^\s@()（）]{1,12})[（(]([^)）]{1,14})[)）]")
+
+
+def load_targets(path: Path | None) -> dict[str, list[str]]:
+    """讀取收件單位對照表：{單位: [會出現在括號裡的字串, ...]}。"""
+    if path is None:
+        return {}
+    with path.open(encoding="utf-8") as fh:
+        targets = json.load(fh)
+    return {k: [str(x) for x in v] for k, v in targets.items() if not k.startswith("_")}
+
+
+def mention_targets(text: str, target_map: dict[str, list[str]]) -> list[str]:
+    """回傳這則訊息點名了哪些單位；沒點名任何人回傳空 list。"""
+    if not target_map:
+        return []
+    hits: set[str] = set()
+    for _name, unit in _MENTION_RE.findall(text):
+        for target, markers in target_map.items():
+            if any(marker in unit for marker in markers):
+                hits.add(target)
+                break  # 對照表由上而下，第一個命中的優先
+    return sorted(hits)
+
 
 def load_roles(path: Path | None) -> dict[str, list[str]]:
     """讀取角色對照表：{角色名稱: [會出現在發話者名字裡的字串, ...]}。"""
@@ -433,8 +459,10 @@ def build_stats(
     rules: dict[str, list[str]],
     examples_per_category: int = 5,
     roles: dict[str, list[str]] | None = None,
+    targets: dict[str, list[str]] | None = None,
 ) -> dict[str, Any]:
     roles = roles or {}
+    targets = targets or {}
     questions = [m for m in messages if classify_kind(m.text)]
 
     category_counts: Counter[str] = Counter()
@@ -445,6 +473,9 @@ def build_stats(
     kind_counts: Counter[str] = Counter()
     role_counts: Counter[str] = Counter()
     role_category: dict[str, Counter[str]] = defaultdict(Counter)
+    target_counts: Counter[str] = Counter()
+    target_category: dict[str, Counter[str]] = defaultdict(Counter)
+    target_examples: dict[str, list[dict[str, str]]] = defaultdict(list)
 
     for msg in questions:
         cats = categorize(msg.text, rules)
@@ -456,6 +487,16 @@ def build_stats(
         role_counts[r] += 1
         for cat in cats:
             role_category[r][cat] += 1
+        for tgt in mention_targets(msg.text, targets):
+            target_counts[tgt] += 1
+            for cat in cats:
+                target_category[tgt][cat] += 1
+            if len(target_examples[tgt]) < examples_per_category:
+                target_examples[tgt].append({
+                    "author": msg.author,
+                    "date": msg.dt.strftime("%Y-%m-%d") if msg.dt else msg.raw_date,
+                    "text": msg.text[:300],
+                })
         for cat in cats:
             category_counts[cat] += 1
             monthly_by_category[cat][month] += 1
@@ -505,6 +546,17 @@ def build_stats(
             "by_kind": dict(kind_counts),
         },
         "by_role": role_breakdown,
+        "by_target": {
+            t: {
+                "total": target_counts[t],
+                "categories": [
+                    {"name": c, "count": n, "share": round(n / target_counts[t], 4)}
+                    for c, n in target_category[t].most_common()
+                ],
+                "examples": target_examples[t],
+            }
+            for t in sorted(target_counts, key=lambda x: -target_counts[x])
+        },
         "date_range": date_range,
         "categories": [
             {
@@ -761,6 +813,11 @@ blockquote .who {
   font-family: ui-monospace, Consolas, monospace;
 }
 
+td.delta { font-weight: 600; }
+td.delta.up { color: var(--eng); }
+td.delta.down { color: var(--sup); }
+td.delta.flat { color: var(--muted); font-weight: 400; }
+
 .note {
   background: var(--surface); border: 1px solid var(--rule);
   border-left: 3px solid var(--accent); padding: .8rem 1rem;
@@ -874,6 +931,56 @@ def _role_cards(by_role: dict[str, Any], min_total: int = 20) -> str:
     return f"<div class='roles'>{''.join(cards)}</div>" if cards else ""
 
 
+def _compare_section(stats: dict[str, Any]) -> str:
+    """把這一期與前一期的分類佔比並列，標出增減幅度。"""
+    cmp = stats.get("compare")
+    if not cmp:
+        return ""
+
+    prev_shares = cmp.get("shares") or {}
+    cur = {c["name"]: c for c in stats["categories"] if c["name"] != UNCATEGORIZED}
+    names = sorted(cur, key=lambda n: -cur[n]["share"])
+    if not names:
+        return ""
+
+    rows = []
+    for name in names:
+        now = cur[name]["share"]
+        before = prev_shares.get(name, 0.0)
+        delta = (now - before) * 100
+        if delta > 2:
+            cls, mark = "up", "▲"
+        elif delta < -2:
+            cls, mark = "down", "▼"
+        else:
+            cls, mark = "flat", "·"
+        rows.append(
+            f"<tr><td>{html.escape(name)}</td>"
+            f"<td class='num'>{before:.1%}</td>"
+            f"<td class='num'>{now:.1%}</td>"
+            f"<td class='num delta {cls}'>{mark} {delta:+.1f}pt</td></tr>"
+        )
+
+    pr = cmp.get("range") or {}
+    prev_label = f"{pr.get('start', '?')} ~ {pr.get('end', '?')}"
+    dr = stats["date_range"]
+    cur_label = f"{dr.get('start', '?')} ~ {dr.get('end', '?')}"
+
+    return f"""
+  <section>
+    <h2>與前一期比較</h2>
+    <p class="lede">每個類型佔「需回應訊息」的比例。因為一則訊息可命中多個類型，
+       各欄加總都會超過 100%，所以看的是同一類型在兩期之間的消長。</p>
+    <div class="scroll"><table>
+      <thead><tr><th>類型</th>
+        <th class="num">{html.escape(prev_label)}</th>
+        <th class="num">{html.escape(cur_label)}</th>
+        <th class="num">變化</th></tr></thead>
+      <tbody>{''.join(rows)}</tbody>
+    </table></div>
+  </section>"""
+
+
 def render_html(stats: dict[str, Any]) -> str:
     t = stats["totals"]
     dr = stats["date_range"]
@@ -918,6 +1025,20 @@ def render_html(stats: dict[str, Any]) -> str:
             f"其餘可從下方關鍵字挑詞補進規則檔再跑一次。</p>"
         )
 
+    target_section = ""
+    tcards = _role_cards(stats.get("by_target") or {}, min_total=50)
+    if tcards:
+        target_section = f"""
+  <section>
+    <h2>訊息丟給誰處理</h2>
+    <p class="lede">群組裡用 @姓名(單位) 點名，括號裡就是對方的單位。
+       這一段只看有點名的訊息，因此直接反映各單位實際被交辦的工作型態。
+       已排除「未分類」。</p>
+    {tcards}
+  </section>"""
+
+    compare_section = _compare_section(stats)
+
     role_section = ""
     cards = _role_cards(stats.get("by_role") or {})
     if cards:
@@ -952,6 +1073,7 @@ def render_html(stats: dict[str, Any]) -> str:
         <span class="stat-l">其中：請求協助</span></div>
     </div>
   </section>
+{target_section}
 {role_section}
 
   <section>
@@ -969,6 +1091,7 @@ def render_html(stats: dict[str, Any]) -> str:
     <h2>每月需回應訊息量</h2>
     {_trend_svg(stats['monthly'])}
   </section>
+{compare_section}
 
   <section>
     <h2>高頻詞</h2>
@@ -1032,6 +1155,15 @@ def main() -> int:
         "--roles",
         help="角色對照表 JSON：{角色: [出現在發話者名字裡的字串]}，用來拆分不同單位的提問",
     )
+    parser.add_argument(
+        "--compare",
+        help="先前一次執行的 stats.json，用來在報告裡並列兩期的分類佔比變化",
+    )
+    parser.add_argument(
+        "--targets",
+        help="收件單位對照表 JSON：{單位: [出現在 @姓名(單位) 括號裡的字串]}，"
+             "用來統計訊息是丟給哪個單位處理的",
+    )
     parser.add_argument("--space", help="只分析名稱含此字串的群組")
     parser.add_argument("--out-dir", default="output", help="輸出目錄（預設 output/）")
     parser.add_argument(
@@ -1046,6 +1178,7 @@ def main() -> int:
 
     rules = load_rules(Path(args.rules).expanduser() if args.rules else None)
     roles = load_roles(Path(args.roles).expanduser() if args.roles else None)
+    targets = load_targets(Path(args.targets).expanduser() if args.targets else None)
 
     print(f"[1/4] 讀取 {input_path} ...", file=sys.stderr)
     messages = load_messages(input_path, args.space)
@@ -1059,7 +1192,17 @@ def main() -> int:
     print(f"        讀到 {len(messages):,} 則訊息", file=sys.stderr)
 
     print("[2/4] 判定問題／請求並分類 ...", file=sys.stderr)
-    stats = build_stats(messages, rules, args.examples, roles)
+    stats = build_stats(messages, rules, args.examples, roles, targets)
+
+    if args.compare:
+        with Path(args.compare).expanduser().open(encoding="utf-8") as fh:
+            prev = json.load(fh)
+        stats["compare"] = {
+            "range": prev.get("date_range", {}),
+            "questions": prev.get("totals", {}).get("questions", 0),
+            "shares": {c["name"]: c["share"] for c in prev.get("categories", [])},
+            "counts": {c["name"]: c["count"] for c in prev.get("categories", [])},
+        }
 
     out_dir = Path(args.out_dir).expanduser()
     out_dir.mkdir(parents=True, exist_ok=True)
