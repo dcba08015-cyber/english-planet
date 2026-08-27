@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{width:1080px;height:1920px;overflow:hidden;background:#070B16}
+  body{font-family:'Noto Sans TC','WenQuanYi Zen Hei',sans-serif;-webkit-font-smoothing:antialiased}
+  #stage{position:relative;width:1080px;height:1920px;overflow:hidden;
+    background:radial-gradient(1200px 900px at 20% 8%,#16204a 0%,transparent 60%),
+               radial-gradient(1000px 800px at 90% 85%,#0f2f3d 0%,transparent 62%),
+               linear-gradient(170deg,#0A1020 0%,#0C1226 55%,#070B16 100%)}
+  .grid{position:absolute;inset:0;opacity:.16;
+    background-image:linear-gradient(#2b3a6b 1px,transparent 1px),linear-gradient(90deg,#2b3a6b 1px,transparent 1px);
+    background-size:60px 60px;
+    -webkit-mask-image:radial-gradient(760px 900px at 50% 42%,#000 0%,transparent 78%)}
+  .blob{position:absolute;border-radius:50%;filter:blur(90px);opacity:.5}
+  #b1{width:620px;height:620px;left:-180px;top:120px;background:#1E4FD8}
+  #b2{width:560px;height:560px;right:-160px;top:980px;background:#0E9C86}
+  .vig{position:absolute;inset:0;box-shadow:inset 0 0 320px 90px rgba(0,0,0,.72);pointer-events:none}
+
+  /* header */
+  #head{position:absolute;top:74px;left:60px;right:60px;display:flex;align-items:center;gap:18px}
+  #logo{display:flex;align-items:center;gap:14px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);
+    padding:14px 26px 14px 18px;border-radius:999px;backdrop-filter:blur(8px)}
+  #logo .dot{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,#35E1C1,#2C7CF6);box-shadow:0 0 22px rgba(53,225,193,.55)}
+  #logo span{color:#DCE6FF;font-size:27px;font-weight:700;letter-spacing:.5px}
+  #logo span b{color:#35E1C1}
+  #bar{position:absolute;top:0;left:0;height:7px;width:100%;background:rgba(255,255,255,.1)}
+  #barfill{height:100%;width:0;background:linear-gradient(90deg,#35E1C1,#2C7CF6);box-shadow:0 0 18px rgba(53,225,193,.8)}
+
+  /* hook */
+  #hook{position:absolute;left:70px;right:70px;top:430px;text-align:center}
+  #hook .l{display:block;color:#fff;font-weight:900;font-size:118px;line-height:1.16;letter-spacing:-1px;
+    text-shadow:0 18px 50px rgba(0,0,0,.6)}
+  #hook .l em{font-style:normal;color:#FF5A5F;text-shadow:0 0 42px rgba(255,90,95,.55)}
+  #hook .l u{text-decoration:none;color:#35E1C1;text-shadow:0 0 42px rgba(53,225,193,.5)}
+  #hooksub{position:absolute;left:90px;right:90px;top:790px;text-align:center;color:#9FB3DA;font-size:44px;font-weight:500;letter-spacing:1px}
+
+  /* step badge */
+  #step{position:absolute;left:70px;top:230px;display:flex;align-items:center;gap:20px}
+  #stepnum{background:linear-gradient(135deg,#35E1C1,#2C7CF6);color:#04121B;font-weight:900;font-size:34px;
+    padding:12px 26px;border-radius:16px;box-shadow:0 10px 34px rgba(44,124,246,.45)}
+  #steptxt{color:#fff;font-size:46px;font-weight:700}
+
+  /* terminal */
+  #term{position:absolute;left:70px;right:70px;top:440px;border-radius:34px;overflow:hidden;
+    background:rgba(9,14,28,.92);border:1px solid rgba(120,150,220,.26);
+    box-shadow:0 40px 110px rgba(0,0,0,.65),inset 0 1px 0 rgba(255,255,255,.06);backdrop-filter:blur(10px)}
+  #termbar{height:78px;display:flex;align-items:center;gap:14px;padding:0 30px;background:rgba(255,255,255,.05);
+    border-bottom:1px solid rgba(120,150,220,.18)}
+  #termbar i{width:19px;height:19px;border-radius:50%;display:block}
+  #termbar .t{margin-left:16px;color:#7E93BE;font-size:26px;font-family:'JetBrains Mono',monospace}
+  #termbody{padding:36px 40px 44px;font-family:'JetBrains Mono','WenQuanYi Zen Hei',monospace;font-size:38px;line-height:1.62;min-height:400px}
+  .ln{color:#C8D6F5;white-space:pre-wrap;word-break:break-all}
+  .ln .p{color:#35E1C1;font-weight:700}
+  .ln.dim{color:#8FA3CB}
+  .ln.ok{color:#5BE59A}
+  .ln.err{color:#FF6B70;font-weight:700}
+  #caret{display:inline-block;width:20px;height:40px;background:#35E1C1;vertical-align:-6px;margin-left:4px}
+
+  /* verdict */
+  #verdict{position:absolute;left:70px;right:70px;top:1010px;display:flex;align-items:flex-start;gap:24px;
+    padding:34px 38px;border-radius:28px;background:rgba(91,229,154,.12);border:1px solid rgba(91,229,154,.4)}
+  #verdict.bad{background:rgba(255,90,95,.13);border-color:rgba(255,90,95,.45)}
+  #vico{font-size:52px;line-height:1}
+  #vtxt{color:#EAF3FF;font-size:44px;font-weight:700;line-height:1.42}
+  #verdict.bad #vtxt{color:#FFDDDE}
+
+  /* fix card */
+  #fix{position:absolute;left:70px;right:70px;top:520px;padding:52px 48px;border-radius:38px;
+    background:linear-gradient(160deg,rgba(53,225,193,.16),rgba(44,124,246,.14));
+    border:1px solid rgba(53,225,193,.4);box-shadow:0 40px 110px rgba(0,0,0,.6)}
+  #fix h3{color:#35E1C1;font-size:38px;font-weight:900;letter-spacing:3px;margin-bottom:22px}
+  #fix h2{color:#fff;font-size:70px;font-weight:900;line-height:1.24;margin-bottom:36px}
+  #fix .row{display:flex;gap:20px;align-items:center;margin-top:22px;color:#DCE6FF;font-size:42px;font-weight:500}
+  #fix .row b{display:inline-flex;align-items:center;justify-content:center;min-width:52px;height:52px;border-radius:14px;
+    background:rgba(255,255,255,.12);color:#35E1C1;font-size:30px;font-weight:900}
+  #fix code{font-family:'JetBrains Mono',monospace;color:#35E1C1;background:rgba(53,225,193,.12);
+    padding:4px 16px;border-radius:10px;font-weight:700}
+
+  /* caption */
+  #cap{position:absolute;left:60px;right:60px;bottom:330px;text-align:center}
+  #cap span{display:inline-block;background:rgba(6,10,22,.82);border:1px solid rgba(255,255,255,.13);
+    color:#fff;font-size:47px;font-weight:700;line-height:1.42;padding:24px 40px;border-radius:26px;
+    box-shadow:0 22px 60px rgba(0,0,0,.55);backdrop-filter:blur(6px)}
+  #cap span u{text-decoration:none;color:#35E1C1}
+  #cap span em{font-style:normal;color:#FFB020}
+
+  /* CTA */
+  #cta{position:absolute;left:70px;right:70px;bottom:180px;text-align:center;color:#8EA3CC;font-size:36px;font-weight:500}
+
+  /* character */
+  #char{position:absolute;left:0;top:0;transform-origin:50% 100%}
+  #speech{position:absolute;padding:20px 30px;border-radius:26px 26px 8px 26px;background:#fff;color:#0A1020;
+    font-size:38px;font-weight:900;box-shadow:0 18px 44px rgba(0,0,0,.45);white-space:nowrap}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div class="grid"></div>
+  <div class="blob" id="b1"></div>
+  <div class="blob" id="b2"></div>
+
+  <div id="head">
+    <div id="logo"><span class="dot"></span><span>智生活科技｜<b>智寶</b>網路急救室</span></div>
+  </div>
+
+  <div id="hook">
+    <span class="l" id="h1">WiFi <u>滿格</u></span>
+    <span class="l" id="h2">卻<em>上不了網</em>？</span>
+  </div>
+  <div id="hooksub">3 行指令，30 秒抓出兇手</div>
+
+  <div id="step"><div id="stepnum">STEP 1</div><div id="steptxt">先確認：你到分享器</div></div>
+
+  <div id="term">
+    <div id="termbar"><i style="background:#FF5F57"></i><i style="background:#FEBC2E"></i><i style="background:#28C840"></i>
+      <span class="t">zhibao@home — 網路急救</span></div>
+    <div id="termbody">
+      <div class="ln" id="l0"><span class="p">$</span> <span id="cmd"></span><span id="caret"></span></div>
+      <div class="ln" id="l1"></div>
+      <div class="ln" id="l2"></div>
+      <div class="ln" id="l3"></div>
+      <div class="ln" id="l4"></div>
+    </div>
+  </div>
+
+  <div id="verdict"><div id="vico">✅</div><div id="vtxt"></div></div>
+
+  <div id="fix">
+    <h3>解法</h3>
+    <h2>把 DNS 換成公用的<br>就活過來了</h2>
+    <div class="row"><b>1</b><div>WiFi 設定 → 進階 → DNS 改「手動」</div></div>
+    <div class="row"><b>2</b><div>填 <code>1.1.1.1</code> 或 <code>8.8.8.8</code></div></div>
+    <div class="row"><b>3</b><div>關掉 WiFi 再開，網頁就通了</div></div>
+  </div>
+
+  <div id="cap"><span id="captxt"></span></div>
+  <div id="cta">追蹤智寶，每天一招網路排錯 👆</div>
+
+  <svg id="char" width="420" height="460" viewBox="0 0 420 460" fill="none">
+    <ellipse id="shadow" cx="210" cy="432" rx="120" ry="18" fill="#000" opacity=".34"/>
+    <g id="body" stroke="#4B4B4B" stroke-width="7" stroke-linejoin="round">
+      <!-- 腳 -->
+      <ellipse cx="168" cy="404" rx="31" ry="23" fill="#FDFDFB"/>
+      <ellipse cx="252" cy="404" rx="31" ry="23" fill="#FDFDFB"/>
+      <!-- 手 -->
+      <ellipse id="armL" cx="112" cy="330" rx="25" ry="38" fill="#FDFDFB"/>
+      <ellipse id="armR" cx="308" cy="330" rx="25" ry="38" fill="#FDFDFB"/>
+      <!-- 身體 -->
+      <rect x="126" y="286" width="168" height="112" rx="56" fill="#FDFDFB"/>
+      <!-- 耳朵 -->
+      <circle cx="130" cy="116" r="37" fill="#FDFDFB"/>
+      <circle cx="290" cy="116" r="37" fill="#FDFDFB"/>
+      <!-- 頭 -->
+      <ellipse cx="210" cy="212" rx="139" ry="123" fill="#FDFDFB"/>
+      <!-- 領結 -->
+      <path d="M210 356 l-34 -18 v36 z" fill="#3A3A3A"/>
+      <path d="M210 356 l34 -18 v36 z" fill="#3A3A3A"/>
+    </g>
+    <g id="face">
+      <ellipse cx="116" cy="252" rx="25" ry="14" fill="#F7BFC9"/>
+      <ellipse cx="304" cy="252" rx="25" ry="14" fill="#F7BFC9"/>
+      <g id="eyes">
+        <ellipse id="eyeL" cx="166" cy="214" rx="14" ry="14" fill="#2E2E2E"/>
+        <ellipse id="eyeR" cx="254" cy="214" rx="14" ry="14" fill="#2E2E2E"/>
+        <path id="eyeLh" d="M150 220 q16 -22 32 0" stroke="#2E2E2E" stroke-width="9" stroke-linecap="round" fill="none" opacity="0"/>
+        <path id="eyeRh" d="M238 220 q16 -22 32 0" stroke="#2E2E2E" stroke-width="9" stroke-linecap="round" fill="none" opacity="0"/>
+      </g>
+      <path id="mouth" d="M192 296 q18 12 36 0" stroke="#4B4B4B" stroke-width="6" stroke-linecap="round" fill="none"/>
+      <!-- 薄荷綠菱形鼻 -->
+      <path d="M210 218 Q234 227 243 250 Q234 273 210 282 Q186 273 177 250 Q186 227 210 218 Z" fill="#19C6B3"/>
+    </g>
+    <!-- WiFi 訊號小徽章 -->
+    <g id="wifi" transform="translate(372,48)" stroke="#19C6B3" stroke-width="9" stroke-linecap="round" fill="none">
+      <path id="w1" d="M-20 14 A28 28 0 0 1 20 14"/>
+      <path id="w2" d="M-38 -4 A54 54 0 0 1 38 -4"/>
+      <circle cx="0" cy="30" r="8" fill="#19C6B3" stroke="none"/>
+    </g>
+    <g id="emo" opacity="0">
+      <circle cx="70" cy="92" r="38" fill="#FF5A5F"/>
+      <rect x="62" y="70" width="16" height="28" rx="8" fill="#fff"/>
+      <circle cx="70" cy="111" r="8" fill="#fff"/>
+    </g>
+  </svg>
+
+  <div id="speech"></div>
+  <div class="vig"></div>
+  <div id="bar"><div id="barfill"></div></div>
+</div>
+<script src="timeline.js"></script>
+</body>
+</html>
