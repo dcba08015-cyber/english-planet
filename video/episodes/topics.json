@@ -1,0 +1,1822 @@
+{
+  "meta": {
+    "channel": "智生活科技｜智寶網路急救室",
+    "host": "智寶",
+    "format": "9:16 短影音，30–60 秒",
+    "template": "鉤子 → 一行指令 → 判讀（兩條分支）→ 解法 → 下集串聯",
+    "layers": {
+      "L1": "實體層",
+      "L2": "交換/無線",
+      "L3": "路由/IP",
+      "L4": "埠/傳輸",
+      "DNS": "名稱解析",
+      "TLS": "憑證加密",
+      "APP": "應用層",
+      "QoS": "流量管理"
+    },
+    "difficulty": {
+      "1": "零基礎",
+      "2": "有概念",
+      "3": "進階/IT"
+    },
+    "status_flow": [
+      "idea",
+      "scripted",
+      "rendered",
+      "published"
+    ],
+    "note": "欄位 status 用來排程：idea→scripted→rendered→published"
+  },
+  "topics": [
+    {
+      "id": "A01",
+      "series": "連得上沒網路",
+      "title": "WiFi 滿格卻上不了網？兇手 90% 是它",
+      "symptom": "滿格但網頁打不開",
+      "env": "家用",
+      "layer": "DNS",
+      "cmd": "nslookup google.com",
+      "difficulty": 1,
+      "verdict": "IP 通、網址不通 = DNS 掛了",
+      "tags": [
+        "DNS",
+        "入門"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "A02",
+      "series": "連得上沒網路",
+      "title": "手機有網路、電腦沒有？先看這一個數字",
+      "symptom": "單一裝置沒網路",
+      "env": "家用",
+      "layer": "L3",
+      "cmd": "ipconfig /all",
+      "difficulty": 1,
+      "verdict": "看到 169.254 開頭 = 沒拿到 IP",
+      "tags": [
+        "DHCP",
+        "入門"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "A03",
+      "series": "連得上沒網路",
+      "title": "出現「169.254」開頭的 IP，代表什麼",
+      "symptom": "自動私有 IP",
+      "env": "家用",
+      "layer": "L3",
+      "cmd": "ipconfig /release && ipconfig /renew",
+      "difficulty": 1,
+      "verdict": "DHCP 沒發到 IP，重租約或查分享器",
+      "tags": [
+        "DHCP"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "A04",
+      "series": "連得上沒網路",
+      "title": "網路圖示有驚嘆號，三步驟解決",
+      "symptom": "黃色驚嘆號",
+      "env": "家用",
+      "layer": "L3",
+      "cmd": "ping 預設閘道",
+      "difficulty": 1,
+      "verdict": "閘道不通就是分享器問題",
+      "tags": [
+        "入門"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "A05",
+      "series": "連得上沒網路",
+      "title": "Ping 得到 IP，網頁卻打不開",
+      "symptom": "IP 通網頁不通",
+      "env": "辦公室",
+      "layer": "DNS",
+      "cmd": "nslookup / Resolve-DnsName",
+      "difficulty": 2,
+      "verdict": "DNS 或 Proxy 設定",
+      "tags": [
+        "DNS"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "A06",
+      "series": "連得上沒網路",
+      "title": "只有 Google 打不開，其他都正常？",
+      "symptom": "單一網站不通",
+      "env": "家用",
+      "layer": "DNS",
+      "cmd": "nslookup google.com 8.8.8.8",
+      "difficulty": 2,
+      "verdict": "DNS 快取汙染，清 DNS 快取",
+      "tags": [
+        "DNS"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "A07",
+      "series": "連得上沒網路",
+      "title": "清 DNS 快取的三個指令（Win/Mac/手機）",
+      "symptom": "DNS 快取殘留",
+      "env": "跨平台",
+      "layer": "DNS",
+      "cmd": "ipconfig /flushdns",
+      "difficulty": 1,
+      "verdict": "改完 DNS 一定要清快取",
+      "tags": [
+        "DNS",
+        "入門"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "A08",
+      "series": "連得上沒網路",
+      "title": "公司網路連得上，就是開不了外網",
+      "symptom": "內網通外網不通",
+      "env": "辦公室",
+      "layer": "L3",
+      "cmd": "tracert 8.8.8.8",
+      "difficulty": 2,
+      "verdict": "卡在防火牆或 Proxy",
+      "tags": [
+        "企業"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "A09",
+      "series": "連得上沒網路",
+      "title": "咖啡廳 WiFi 連上卻沒跳登入頁",
+      "symptom": "Captive Portal 沒跳",
+      "env": "公用WiFi",
+      "layer": "APP",
+      "cmd": "開 http://neverssl.com",
+      "difficulty": 1,
+      "verdict": "HTTPS 擋住轉址，要用 http 網站觸發",
+      "tags": [
+        "公用WiFi",
+        "入門"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "A10",
+      "series": "連得上沒網路",
+      "title": "手機熱點分享後電腦上不了網",
+      "symptom": "熱點沒網路",
+      "env": "熱點",
+      "layer": "L3",
+      "cmd": "檢查 APN / 熱點裝置數",
+      "difficulty": 2,
+      "verdict": "電信商擋熱點或裝置數上限",
+      "tags": [
+        "行動網路"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "A11",
+      "series": "連得上沒網路",
+      "title": "換了新分享器就上不了網",
+      "symptom": "換機後失聯",
+      "env": "家用",
+      "layer": "L2",
+      "cmd": "重開機順序：數據機→分享器→電腦",
+      "difficulty": 1,
+      "verdict": "數據機記住舊 MAC，要斷電 5 分鐘",
+      "tags": [
+        "入門"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "A12",
+      "series": "連得上沒網路",
+      "title": "兩台分享器接在一起，網路就壞了",
+      "symptom": "雙 NAT",
+      "env": "家用",
+      "layer": "L3",
+      "cmd": "tracert 看到兩個私有 IP",
+      "difficulty": 3,
+      "verdict": "第二台要改 AP 模式",
+      "tags": [
+        "進階"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "A13",
+      "series": "連得上沒網路",
+      "title": "IP 衝突長什麼樣子？怎麼修",
+      "symptom": "IP 衝突",
+      "env": "辦公室",
+      "layer": "L3",
+      "cmd": "arp -a",
+      "difficulty": 2,
+      "verdict": "兩台拿到同一個 IP，改固定 IP 或 DHCP 保留",
+      "tags": [
+        "進階"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "A14",
+      "series": "連得上沒網路",
+      "title": "VPN 一開，全公司網路都不見了",
+      "symptom": "VPN 搶路由",
+      "env": "遠端",
+      "layer": "L3",
+      "cmd": "route print",
+      "difficulty": 3,
+      "verdict": "VPN 搶了預設路由，要設 split tunnel",
+      "tags": [
+        "VPN",
+        "進階"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "A15",
+      "series": "連得上沒網路",
+      "title": "VPN 連上了，但內網系統打不開",
+      "symptom": "VPN 通但內網不通",
+      "env": "遠端",
+      "layer": "DNS",
+      "cmd": "nslookup 內網主機",
+      "difficulty": 3,
+      "verdict": "VPN 沒推內部 DNS",
+      "tags": [
+        "VPN",
+        "DNS"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "B01",
+      "series": "網路很慢",
+      "title": "網路慢，先量這三個數字再罵電信商",
+      "symptom": "整體變慢",
+      "env": "家用",
+      "layer": "L3",
+      "cmd": "ping -t 8.8.8.8 看抖動",
+      "difficulty": 1,
+      "verdict": "延遲/抖動/丟包，三個一起看",
+      "tags": [
+        "測速",
+        "入門"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "B02",
+      "series": "網路很慢",
+      "title": "測速 300M 卻很卡？你量錯東西了",
+      "symptom": "速度快但卡",
+      "env": "家用",
+      "layer": "L4",
+      "cmd": "延遲 vs 頻寬的差別",
+      "difficulty": 1,
+      "verdict": "卡頓看延遲，不是看 Mbps",
+      "tags": [
+        "觀念",
+        "入門"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "B03",
+      "series": "網路很慢",
+      "title": "晚上特別慢，是誰在偷你的頻寬",
+      "symptom": "尖峰時段慢",
+      "env": "家用",
+      "layer": "L3",
+      "cmd": "分享器流量表 / QoS",
+      "difficulty": 2,
+      "verdict": "社區共用頻寬或家人在下載",
+      "tags": [
+        "QoS"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "B04",
+      "series": "網路很慢",
+      "title": "WiFi 訊號滿格但很慢：頻道打架了",
+      "symptom": "同頻干擾",
+      "env": "家用",
+      "layer": "L1",
+      "cmd": "WiFi Analyzer 掃頻道",
+      "difficulty": 2,
+      "verdict": "2.4G 只有 1/6/11 三個不重疊頻道",
+      "tags": [
+        "WiFi",
+        "進階"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "B05",
+      "series": "網路很慢",
+      "title": "2.4G 跟 5G 到底該連哪一個",
+      "symptom": "選錯頻段",
+      "env": "家用",
+      "layer": "L1",
+      "cmd": "比較穿牆 vs 速度",
+      "difficulty": 1,
+      "verdict": "隔房間用 2.4G，同房間用 5G",
+      "tags": [
+        "WiFi",
+        "入門"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "B06",
+      "series": "網路很慢",
+      "title": "網路線也會拖慢速度？看這個數字",
+      "symptom": "協商成 100M",
+      "env": "辦公室",
+      "layer": "L1",
+      "cmd": "看網卡連線速度",
+      "difficulty": 2,
+      "verdict": "線材或水晶頭壞，只跑 100Mbps",
+      "tags": [
+        "實體層"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "B07",
+      "series": "網路很慢",
+      "title": "Ping 值忽高忽低，問題在哪一段",
+      "symptom": "抖動大",
+      "env": "家用",
+      "layer": "L3",
+      "cmd": "pathping / mtr",
+      "difficulty": 3,
+      "verdict": "逐段看，找出開始爆的那一跳",
+      "tags": [
+        "進階"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "B08",
+      "series": "網路很慢",
+      "title": "下載很快、上傳很慢，正常嗎",
+      "symptom": "上下行不對稱",
+      "env": "家用",
+      "layer": "L3",
+      "cmd": "上下行測速",
+      "difficulty": 1,
+      "verdict": "非對稱線路本來就這樣，但差太多要查",
+      "tags": [
+        "觀念"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "B09",
+      "series": "網路很慢",
+      "title": "開視訊會議就全家斷線",
+      "symptom": "頻寬吃滿",
+      "env": "家用",
+      "layer": "QoS",
+      "cmd": "分享器開 QoS",
+      "difficulty": 2,
+      "verdict": "上行被吃滿，優先權要給會議",
+      "tags": [
+        "QoS"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "B10",
+      "series": "網路很慢",
+      "title": "丟包 1% 有多嚴重？比你想的嚴重",
+      "symptom": "丟包",
+      "env": "家用",
+      "layer": "L3",
+      "cmd": "ping 統計遺失率",
+      "difficulty": 2,
+      "verdict": "1% 丟包就會讓 TCP 速度砍半",
+      "tags": [
+        "觀念",
+        "進階"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "B11",
+      "series": "網路很慢",
+      "title": "Wi-Fi 6 換了沒感覺？可能卡在這",
+      "symptom": "升級無感",
+      "env": "家用",
+      "layer": "L1",
+      "cmd": "確認裝置與頻寬支援",
+      "difficulty": 2,
+      "verdict": "對外只有 100M，換路由器沒用",
+      "tags": [
+        "WiFi"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "B12",
+      "series": "網路很慢",
+      "title": "電腦一開機就狂佔網路",
+      "symptom": "背景更新",
+      "env": "家用",
+      "layer": "APP",
+      "cmd": "資源監視器看網路",
+      "difficulty": 1,
+      "verdict": "Windows Update / 雲端同步",
+      "tags": [
+        "入門"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "B13",
+      "series": "網路很慢",
+      "title": "MTU 設錯，網頁載一半就卡住",
+      "symptom": "MTU 黑洞",
+      "env": "家用",
+      "layer": "L3",
+      "cmd": "ping -f -l 1472",
+      "difficulty": 3,
+      "verdict": "PPPoE 要設 1492",
+      "tags": [
+        "進階"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "B14",
+      "series": "網路很慢",
+      "title": "網路芳鄰複製檔案超慢",
+      "symptom": "SMB 慢",
+      "env": "辦公室",
+      "layer": "L4",
+      "cmd": "改用有線 / 關 SMB 簽章",
+      "difficulty": 2,
+      "verdict": "通常是無線或防毒在攔",
+      "tags": [
+        "企業"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "B15",
+      "series": "網路很慢",
+      "title": "為什麼你家 WiFi 到房間就沒訊號",
+      "symptom": "覆蓋不足",
+      "env": "家用",
+      "layer": "L1",
+      "cmd": "畫覆蓋圖 / Mesh",
+      "difficulty": 1,
+      "verdict": "牆與距離，不是分享器不夠貴",
+      "tags": [
+        "WiFi",
+        "入門"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "C01",
+      "series": "斷斷續續",
+      "title": "網路每 10 分鐘斷一次，怎麼抓",
+      "symptom": "週期性斷線",
+      "env": "家用",
+      "layer": "L3",
+      "cmd": "ping -t 記錄時間點",
+      "difficulty": 2,
+      "verdict": "用連續 ping 記錄斷線時間找規律",
+      "tags": [
+        "進階"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "C02",
+      "series": "斷斷續續",
+      "title": "一開微波爐 WiFi 就斷",
+      "symptom": "2.4G 干擾",
+      "env": "家用",
+      "layer": "L1",
+      "cmd": "改用 5G 頻段",
+      "difficulty": 1,
+      "verdict": "微波爐正好在 2.4GHz",
+      "tags": [
+        "WiFi",
+        "冷知識"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "C03",
+      "series": "斷斷續續",
+      "title": "筆電睡醒就沒網路",
+      "symptom": "省電斷網",
+      "env": "家用",
+      "layer": "L2",
+      "cmd": "關閉網卡省電模式",
+      "difficulty": 1,
+      "verdict": "電源管理把網卡關掉了",
+      "tags": [
+        "入門"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "C04",
+      "series": "斷斷續續",
+      "title": "手機在家會自動跳來跳去（漫遊）",
+      "symptom": "漫遊亂跳",
+      "env": "家用",
+      "layer": "L2",
+      "cmd": "Mesh 同 SSID 設定",
+      "difficulty": 3,
+      "verdict": "訊號重疊區的黏著問題",
+      "tags": [
+        "WiFi",
+        "進階"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "C05",
+      "series": "斷斷續續",
+      "title": "下雨就斷線，這不是迷信",
+      "symptom": "線路受潮",
+      "env": "家用",
+      "layer": "L1",
+      "cmd": "檢查戶外接頭 / 報修",
+      "difficulty": 2,
+      "verdict": "接頭進水，光衰或雜訊上升",
+      "tags": [
+        "實體層"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "C06",
+      "series": "斷斷續續",
+      "title": "分享器過熱會斷線嗎？會",
+      "symptom": "過熱",
+      "env": "家用",
+      "layer": "L1",
+      "cmd": "摸機殼 / 改善散熱",
+      "difficulty": 1,
+      "verdict": "疊在機上盒上面是大忌",
+      "tags": [
+        "入門"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "C07",
+      "series": "斷斷續續",
+      "title": "線鬆了長什麼樣：燈號會告訴你",
+      "symptom": "接觸不良",
+      "env": "家用",
+      "layer": "L1",
+      "cmd": "看網孔燈號閃法",
+      "difficulty": 1,
+      "verdict": "燈不亮或狂閃就是實體層",
+      "tags": [
+        "實體層",
+        "入門"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "C08",
+      "series": "斷斷續續",
+      "title": "遊戲突然跳 ping，其他都正常",
+      "symptom": "路由抖動",
+      "env": "家用",
+      "layer": "L3",
+      "cmd": "mtr 看中間節點",
+      "difficulty": 3,
+      "verdict": "某一跳在丟包，通常是對外節點",
+      "tags": [
+        "遊戲",
+        "進階"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "C09",
+      "series": "斷斷續續",
+      "title": "開會到一半 Teams 說網路不穩",
+      "symptom": "上行不足",
+      "env": "辦公室",
+      "layer": "L4",
+      "cmd": "看上行使用率",
+      "difficulty": 2,
+      "verdict": "視訊吃上行，不是下行",
+      "tags": [
+        "企業"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "C10",
+      "series": "斷斷續續",
+      "title": "智慧家電三不五時離線",
+      "symptom": "IoT 掉線",
+      "env": "家用",
+      "layer": "L2",
+      "cmd": "2.4G 專用 SSID",
+      "difficulty": 2,
+      "verdict": "IoT 大多只吃 2.4G，別用同一個 SSID",
+      "tags": [
+        "IoT"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "D01",
+      "series": "特定服務壞掉",
+      "title": "只有某個網站打不開，先分三種可能",
+      "symptom": "單站不通",
+      "env": "家用",
+      "layer": "APP",
+      "cmd": "換裝置/換網路交叉測試",
+      "difficulty": 1,
+      "verdict": "你的問題、線路問題、還是它掛了",
+      "tags": [
+        "方法論",
+        "入門"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "D02",
+      "series": "特定服務壞掉",
+      "title": "怎麼確認「是不是網站自己掛了」",
+      "symptom": "服務中斷",
+      "env": "家用",
+      "layer": "APP",
+      "cmd": "查 downdetector / status 頁",
+      "difficulty": 1,
+      "verdict": "別花兩小時修別人的伺服器",
+      "tags": [
+        "入門"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "D03",
+      "series": "特定服務壞掉",
+      "title": "網頁顯示「您的連線不是私人連線」",
+      "symptom": "憑證錯誤",
+      "env": "家用",
+      "layer": "TLS",
+      "cmd": "看憑證有效日期與網域",
+      "difficulty": 2,
+      "verdict": "憑證過期、時間錯、或被攔截",
+      "tags": [
+        "TLS"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "D04",
+      "series": "特定服務壞掉",
+      "title": "電腦時間錯了，整個 HTTPS 都會壞",
+      "symptom": "時間偏移",
+      "env": "家用",
+      "layer": "TLS",
+      "cmd": "w32tm /resync",
+      "difficulty": 2,
+      "verdict": "憑證驗證看系統時間",
+      "tags": [
+        "TLS",
+        "冷知識"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "D05",
+      "series": "特定服務壞掉",
+      "title": "公司內網系統只有我打不開",
+      "symptom": "本機設定",
+      "env": "辦公室",
+      "layer": "APP",
+      "cmd": "檢查 hosts 檔",
+      "difficulty": 2,
+      "verdict": "hosts 檔或 Proxy 例外",
+      "tags": [
+        "企業"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "D06",
+      "series": "特定服務壞掉",
+      "title": "hosts 檔是什麼？它會蓋過 DNS",
+      "symptom": "hosts 覆蓋",
+      "env": "跨平台",
+      "layer": "DNS",
+      "cmd": "檢視 hosts",
+      "difficulty": 2,
+      "verdict": "優先權比 DNS 高，改錯會很難查",
+      "tags": [
+        "DNS",
+        "進階"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "D07",
+      "series": "特定服務壞掉",
+      "title": "Email 收得到、寄不出去",
+      "symptom": "SMTP 埠被擋",
+      "env": "家用",
+      "layer": "L4",
+      "cmd": "Test-NetConnection -Port 587",
+      "difficulty": 2,
+      "verdict": "25 埠被 ISP 擋，改 587",
+      "tags": [
+        "Email"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "D08",
+      "series": "特定服務壞掉",
+      "title": "網路磁碟機連不上，先測這個埠",
+      "symptom": "SMB 埠",
+      "env": "辦公室",
+      "layer": "L4",
+      "cmd": "測 445 埠",
+      "difficulty": 2,
+      "verdict": "防火牆或 SMBv1 被停用",
+      "tags": [
+        "企業"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "D09",
+      "series": "特定服務壞掉",
+      "title": "印表機掃描到電腦失敗",
+      "symptom": "埠/防火牆",
+      "env": "辦公室",
+      "layer": "L4",
+      "cmd": "檢查同網段與防火牆",
+      "difficulty": 2,
+      "verdict": "跨 VLAN 或防火牆擋掉",
+      "tags": [
+        "企業"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "D10",
+      "series": "特定服務壞掉",
+      "title": "串流影片一直轉圈，網速卻正常",
+      "symptom": "CDN 節點",
+      "env": "家用",
+      "layer": "L3",
+      "cmd": "換 DNS 換節點",
+      "difficulty": 2,
+      "verdict": "被導到很遠的 CDN",
+      "tags": [
+        "串流"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "D11",
+      "series": "特定服務壞掉",
+      "title": "遊戲連不上但網頁正常",
+      "symptom": "UDP 埠",
+      "env": "家用",
+      "layer": "L4",
+      "cmd": "查遊戲所需埠",
+      "difficulty": 3,
+      "verdict": "UDP 埠被擋或 NAT 類型",
+      "tags": [
+        "遊戲"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "D12",
+      "series": "特定服務壞掉",
+      "title": "NAT 類型「嚴格」是什麼意思",
+      "symptom": "NAT 類型",
+      "env": "家用",
+      "layer": "L3",
+      "cmd": "開 UPnP / 埠轉發",
+      "difficulty": 3,
+      "verdict": "雙 NAT 或 CGNAT 造成",
+      "tags": [
+        "遊戲",
+        "進階"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "D13",
+      "series": "特定服務壞掉",
+      "title": "監視器在外面看不到，在家可以",
+      "symptom": "外網存取",
+      "env": "家用",
+      "layer": "L3",
+      "cmd": "檢查是否為 CGNAT",
+      "difficulty": 3,
+      "verdict": "沒有真實公網 IP",
+      "tags": [
+        "IoT",
+        "進階"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "D14",
+      "series": "特定服務壞掉",
+      "title": "什麼是 CGNAT？為什麼它擋住你",
+      "symptom": "CGNAT",
+      "env": "家用",
+      "layer": "L3",
+      "cmd": "比對 WAN IP 與外部查到的 IP",
+      "difficulty": 3,
+      "verdict": "兩個 IP 不一樣就是 CGNAT",
+      "tags": [
+        "觀念",
+        "進階"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "D15",
+      "series": "特定服務壞掉",
+      "title": "雲端硬碟同步永遠卡在 99%",
+      "symptom": "同步卡住",
+      "env": "家用",
+      "layer": "APP",
+      "cmd": "看是否被防毒掃描攔",
+      "difficulty": 2,
+      "verdict": "防毒或檔案鎖定",
+      "tags": [
+        "入門"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "E01",
+      "series": "指令教學",
+      "title": "ping 到底在測什麼？三個數字看懂",
+      "symptom": "—",
+      "env": "跨平台",
+      "layer": "L3",
+      "cmd": "ping",
+      "difficulty": 1,
+      "verdict": "通不通、多快、穩不穩",
+      "tags": [
+        "工具",
+        "入門"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "E02",
+      "series": "指令教學",
+      "title": "TTL 那個數字能看出對方是什麼系統",
+      "symptom": "—",
+      "env": "跨平台",
+      "layer": "L3",
+      "cmd": "ping 看 TTL",
+      "difficulty": 2,
+      "verdict": "64=Linux 128=Windows，還能算跳數",
+      "tags": [
+        "工具",
+        "冷知識"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "E03",
+      "series": "指令教學",
+      "title": "tracert 怎麼看：卡在第幾跳最重要",
+      "symptom": "—",
+      "env": "跨平台",
+      "layer": "L3",
+      "cmd": "tracert",
+      "difficulty": 2,
+      "verdict": "看第一個開始爆的節點",
+      "tags": [
+        "工具"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "E04",
+      "series": "指令教學",
+      "title": "tracert 中間出現 * * * 要緊張嗎",
+      "symptom": "—",
+      "env": "跨平台",
+      "layer": "L3",
+      "cmd": "tracert",
+      "difficulty": 2,
+      "verdict": "多半只是不回應 ICMP，不是斷了",
+      "tags": [
+        "工具",
+        "觀念"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "E05",
+      "series": "指令教學",
+      "title": "nslookup 三種用法，DNS 問題一次抓",
+      "symptom": "—",
+      "env": "跨平台",
+      "layer": "DNS",
+      "cmd": "nslookup",
+      "difficulty": 2,
+      "verdict": "指定 DNS 伺服器交叉比對",
+      "tags": [
+        "工具",
+        "DNS"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "E06",
+      "series": "指令教學",
+      "title": "ipconfig /all 只要看這四行",
+      "symptom": "—",
+      "env": "Windows",
+      "layer": "L3",
+      "cmd": "ipconfig /all",
+      "difficulty": 1,
+      "verdict": "IP、遮罩、閘道、DNS",
+      "tags": [
+        "工具",
+        "入門"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "E07",
+      "series": "指令教學",
+      "title": "netstat 看誰在偷連你的電腦",
+      "symptom": "—",
+      "env": "Windows",
+      "layer": "L4",
+      "cmd": "netstat -ano",
+      "difficulty": 2,
+      "verdict": "對照 PID 找出程式",
+      "tags": [
+        "工具",
+        "資安"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "E08",
+      "series": "指令教學",
+      "title": "Test-NetConnection：Windows 版的萬用測埠",
+      "symptom": "—",
+      "env": "Windows",
+      "layer": "L4",
+      "cmd": "Test-NetConnection -Port",
+      "difficulty": 2,
+      "verdict": "取代 telnet 測埠",
+      "tags": [
+        "工具"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "E09",
+      "series": "指令教學",
+      "title": "Mac 沒有 ipconfig？用這三個",
+      "symptom": "—",
+      "env": "Mac",
+      "layer": "L3",
+      "cmd": "ifconfig / networksetup",
+      "difficulty": 1,
+      "verdict": "Mac 對照指令表",
+      "tags": [
+        "工具",
+        "Mac"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "E10",
+      "series": "指令教學",
+      "title": "arp -a：找出網路上有誰",
+      "symptom": "—",
+      "env": "跨平台",
+      "layer": "L2",
+      "cmd": "arp -a",
+      "difficulty": 2,
+      "verdict": "MAC 對照表，抓 IP 衝突",
+      "tags": [
+        "工具"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "E11",
+      "series": "指令教學",
+      "title": "route print：看電腦怎麼決定往哪送",
+      "symptom": "—",
+      "env": "Windows",
+      "layer": "L3",
+      "cmd": "route print",
+      "difficulty": 3,
+      "verdict": "預設路由與度量值",
+      "tags": [
+        "工具",
+        "進階"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "E12",
+      "series": "指令教學",
+      "title": "curl -I 一行看出網站到底回什麼",
+      "symptom": "—",
+      "env": "跨平台",
+      "layer": "APP",
+      "cmd": "curl -I",
+      "difficulty": 2,
+      "verdict": "狀態碼比截圖有用",
+      "tags": [
+        "工具",
+        "進階"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "E13",
+      "series": "指令教學",
+      "title": "mtr / pathping：ping 跟 tracert 的合體",
+      "symptom": "—",
+      "env": "跨平台",
+      "layer": "L3",
+      "cmd": "pathping",
+      "difficulty": 3,
+      "verdict": "逐跳丟包率，抓中間壞掉的那段",
+      "tags": [
+        "工具",
+        "進階"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "E14",
+      "series": "指令教學",
+      "title": "Windows 網路重置：最後一招怎麼下",
+      "symptom": "—",
+      "env": "Windows",
+      "layer": "L3",
+      "cmd": "netsh int ip reset",
+      "difficulty": 2,
+      "verdict": "重置前先備份設定",
+      "tags": [
+        "工具"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "E15",
+      "series": "指令教學",
+      "title": "手機也能排錯：內建的三個工具",
+      "symptom": "—",
+      "env": "行動",
+      "layer": "L3",
+      "cmd": "手機網路診斷",
+      "difficulty": 1,
+      "verdict": "不用電腦也能查",
+      "tags": [
+        "行動",
+        "入門"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "F01",
+      "series": "觀念",
+      "title": "IP 是門牌、DNS 是電話簿：30 秒搞懂",
+      "symptom": "—",
+      "env": "—",
+      "layer": "DNS",
+      "cmd": "—",
+      "difficulty": 1,
+      "verdict": "用比喻建立整張地圖",
+      "tags": [
+        "觀念",
+        "入門"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "F02",
+      "series": "觀念",
+      "title": "OSI 七層？排錯只要記三層",
+      "symptom": "—",
+      "env": "—",
+      "layer": "L3",
+      "cmd": "—",
+      "difficulty": 1,
+      "verdict": "實體→路由→應用，由下往上查",
+      "tags": [
+        "觀念",
+        "方法論"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "F03",
+      "series": "觀念",
+      "title": "為什麼「重開機」真的有用",
+      "symptom": "—",
+      "env": "—",
+      "layer": "L2",
+      "cmd": "—",
+      "difficulty": 1,
+      "verdict": "重新協商 DHCP 與清狀態",
+      "tags": [
+        "觀念",
+        "入門"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "F04",
+      "series": "觀念",
+      "title": "192.168 開頭是什麼意思",
+      "symptom": "—",
+      "env": "—",
+      "layer": "L3",
+      "cmd": "—",
+      "difficulty": 1,
+      "verdict": "私有 IP 網段的三個範圍",
+      "tags": [
+        "觀念",
+        "入門"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "F05",
+      "series": "觀念",
+      "title": "子網路遮罩 255.255.255.0 在說什麼",
+      "symptom": "—",
+      "env": "—",
+      "layer": "L3",
+      "cmd": "—",
+      "difficulty": 2,
+      "verdict": "哪些人算「同一條巷子」",
+      "tags": [
+        "觀念"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "F06",
+      "series": "觀念",
+      "title": "數據機 vs 分享器 vs AP，差在哪",
+      "symptom": "—",
+      "env": "家用",
+      "layer": "L3",
+      "cmd": "—",
+      "difficulty": 1,
+      "verdict": "三個角色一次分清楚",
+      "tags": [
+        "觀念",
+        "入門"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "F07",
+      "series": "觀念",
+      "title": "公網 IP 跟私網 IP 差在哪",
+      "symptom": "—",
+      "env": "—",
+      "layer": "L3",
+      "cmd": "—",
+      "difficulty": 1,
+      "verdict": "門牌 vs 房號",
+      "tags": [
+        "觀念",
+        "入門"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "F08",
+      "series": "觀念",
+      "title": "為什麼網管都先問「有沒有換過東西」",
+      "symptom": "—",
+      "env": "—",
+      "layer": "—",
+      "cmd": "—",
+      "difficulty": 1,
+      "verdict": "變更就是第一嫌疑犯",
+      "tags": [
+        "方法論"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "F09",
+      "series": "觀念",
+      "title": "二分法排錯：每次砍一半，三次就找到",
+      "symptom": "—",
+      "env": "—",
+      "layer": "—",
+      "cmd": "—",
+      "difficulty": 2,
+      "verdict": "最有效的排錯心法",
+      "tags": [
+        "方法論",
+        "進階"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "F10",
+      "series": "觀念",
+      "title": "HTTPS 的鎖頭到底鎖了什麼",
+      "symptom": "—",
+      "env": "—",
+      "layer": "TLS",
+      "cmd": "—",
+      "difficulty": 2,
+      "verdict": "加密 + 身分驗證",
+      "tags": [
+        "TLS",
+        "觀念"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "F11",
+      "series": "觀念",
+      "title": "DNS over HTTPS 開了會怎樣",
+      "symptom": "—",
+      "env": "—",
+      "layer": "DNS",
+      "cmd": "—",
+      "difficulty": 3,
+      "verdict": "公司管控會失效，家用較隱私",
+      "tags": [
+        "DNS",
+        "進階"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "F12",
+      "series": "觀念",
+      "title": "VPN 不會讓你變快，它做的是這件事",
+      "symptom": "—",
+      "env": "—",
+      "layer": "L3",
+      "cmd": "—",
+      "difficulty": 1,
+      "verdict": "破除迷思",
+      "tags": [
+        "VPN",
+        "觀念"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "F13",
+      "series": "觀念",
+      "title": "為什麼有線永遠比無線穩",
+      "symptom": "—",
+      "env": "—",
+      "layer": "L1",
+      "cmd": "—",
+      "difficulty": 1,
+      "verdict": "共享媒介 vs 專用線路",
+      "tags": [
+        "觀念",
+        "入門"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "F14",
+      "series": "觀念",
+      "title": "分享器要不要每天重開？",
+      "symptom": "—",
+      "env": "家用",
+      "layer": "—",
+      "cmd": "—",
+      "difficulty": 1,
+      "verdict": "不用，但該定期更新韌體",
+      "tags": [
+        "迷思",
+        "入門"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "F15",
+      "series": "觀念",
+      "title": "Mbps 跟 MB/s 差 8 倍，別再被騙",
+      "symptom": "—",
+      "env": "—",
+      "layer": "—",
+      "cmd": "—",
+      "difficulty": 1,
+      "verdict": "單位換算",
+      "tags": [
+        "觀念",
+        "入門"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "G01",
+      "series": "資安",
+      "title": "公用 WiFi 到底能不能用？看這三件事",
+      "symptom": "—",
+      "env": "公用WiFi",
+      "layer": "TLS",
+      "cmd": "—",
+      "difficulty": 1,
+      "verdict": "HTTPS、不裝憑證、不轉帳",
+      "tags": [
+        "資安",
+        "入門"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "G02",
+      "series": "資安",
+      "title": "有人叫你「安裝憑證」才能上網：快跑",
+      "symptom": "中間人",
+      "env": "公用WiFi",
+      "layer": "TLS",
+      "cmd": "—",
+      "difficulty": 2,
+      "verdict": "這是攔截你的 HTTPS",
+      "tags": [
+        "資安"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "G03",
+      "series": "資安",
+      "title": "假的免費 WiFi 長什麼樣",
+      "symptom": "釣魚熱點",
+      "env": "公用WiFi",
+      "layer": "L2",
+      "cmd": "—",
+      "difficulty": 2,
+      "verdict": "同名 SSID、不用密碼",
+      "tags": [
+        "資安"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "G04",
+      "series": "資安",
+      "title": "家裡 WiFi 有陌生裝置，怎麼踢掉",
+      "symptom": "蹭網",
+      "env": "家用",
+      "layer": "L2",
+      "cmd": "分享器連線清單 / 改密碼",
+      "difficulty": 2,
+      "verdict": "改密碼比封 MAC 有效",
+      "tags": [
+        "資安",
+        "入門"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "G05",
+      "series": "資安",
+      "title": "WPA2 跟 WPA3 差在哪，要不要換",
+      "symptom": "—",
+      "env": "家用",
+      "layer": "L2",
+      "cmd": "—",
+      "difficulty": 2,
+      "verdict": "WPA3 防離線破解",
+      "tags": [
+        "資安"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "G06",
+      "series": "資安",
+      "title": "分享器預設密碼沒改，會發生什麼事",
+      "symptom": "—",
+      "env": "家用",
+      "layer": "APP",
+      "cmd": "—",
+      "difficulty": 1,
+      "verdict": "被改 DNS 導到釣魚站",
+      "tags": [
+        "資安",
+        "入門"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "G07",
+      "series": "資安",
+      "title": "你的 DNS 被改掉了，怎麼看出來",
+      "symptom": "DNS 劫持",
+      "env": "家用",
+      "layer": "DNS",
+      "cmd": "ipconfig /all 看 DNS 位址",
+      "difficulty": 2,
+      "verdict": "DNS 指到陌生 IP",
+      "tags": [
+        "資安",
+        "DNS"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "G08",
+      "series": "資安",
+      "title": "訪客網路要開嗎？三個理由開",
+      "symptom": "—",
+      "env": "家用",
+      "layer": "L2",
+      "cmd": "—",
+      "difficulty": 1,
+      "verdict": "隔離 IoT 與訪客",
+      "tags": [
+        "資安"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "G09",
+      "series": "資安",
+      "title": "韌體更新為什麼比防毒重要",
+      "symptom": "—",
+      "env": "家用",
+      "layer": "APP",
+      "cmd": "—",
+      "difficulty": 2,
+      "verdict": "漏洞是從路由器進來的",
+      "tags": [
+        "資安"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "G10",
+      "series": "資安",
+      "title": "遠端桌面開在外網有多危險",
+      "symptom": "—",
+      "env": "辦公室",
+      "layer": "L4",
+      "cmd": "—",
+      "difficulty": 3,
+      "verdict": "3389 直接曝露會被爆破",
+      "tags": [
+        "資安",
+        "企業"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "H01",
+      "series": "企業",
+      "title": "整層樓網路都掛了，先查哪一台",
+      "symptom": "全面斷網",
+      "env": "辦公室",
+      "layer": "L2",
+      "cmd": "從核心往下逐層 ping",
+      "difficulty": 3,
+      "verdict": "由上而下 vs 由下而上",
+      "tags": [
+        "企業",
+        "方法論"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "H02",
+      "series": "企業",
+      "title": "網路迴圈（Loop）會讓整個辦公室癱瘓",
+      "symptom": "廣播風暴",
+      "env": "辦公室",
+      "layer": "L2",
+      "cmd": "看交換器燈全亮狂閃",
+      "difficulty": 3,
+      "verdict": "兩條線接同一台交換器",
+      "tags": [
+        "企業",
+        "進階"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "H03",
+      "series": "企業",
+      "title": "VLAN 是什麼？為什麼你連不到別部門",
+      "symptom": "跨 VLAN",
+      "env": "辦公室",
+      "layer": "L2",
+      "cmd": "—",
+      "difficulty": 3,
+      "verdict": "邏輯隔離，要靠路由才通",
+      "tags": [
+        "企業",
+        "進階"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "H04",
+      "series": "企業",
+      "title": "Proxy 設定錯，網頁全部打不開",
+      "symptom": "Proxy 錯誤",
+      "env": "辦公室",
+      "layer": "APP",
+      "cmd": "檢查系統 Proxy 設定",
+      "difficulty": 2,
+      "verdict": "自動設定指令碼失效",
+      "tags": [
+        "企業"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "H05",
+      "series": "企業",
+      "title": "公司擋網站是怎麼擋的（三種手法）",
+      "symptom": "被封鎖",
+      "env": "辦公室",
+      "layer": "DNS",
+      "cmd": "—",
+      "difficulty": 2,
+      "verdict": "DNS、Proxy、防火牆",
+      "tags": [
+        "企業",
+        "觀念"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "H06",
+      "series": "企業",
+      "title": "新人電腦連得上網路，卻登不進網域",
+      "symptom": "網域登入",
+      "env": "辦公室",
+      "layer": "DNS",
+      "cmd": "檢查 DNS 是否指向 DC",
+      "difficulty": 3,
+      "verdict": "網域環境 DNS 一定要指內部",
+      "tags": [
+        "企業",
+        "進階"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "H07",
+      "series": "企業",
+      "title": "網路線該用 Cat5e 還 Cat6？",
+      "symptom": "線材選擇",
+      "env": "辦公室",
+      "layer": "L1",
+      "cmd": "—",
+      "difficulty": 1,
+      "verdict": "看距離與速率需求",
+      "tags": [
+        "實體層",
+        "入門"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "H08",
+      "series": "企業",
+      "title": "牆上網路孔沒反應，三步驟確認",
+      "symptom": "牆孔不通",
+      "env": "辦公室",
+      "layer": "L1",
+      "cmd": "換線→換孔→測線器",
+      "difficulty": 2,
+      "verdict": "先排除最便宜的可能",
+      "tags": [
+        "實體層"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "H09",
+      "series": "企業",
+      "title": "PoE 監視器沒電？先看預算表",
+      "symptom": "PoE 不足",
+      "env": "辦公室",
+      "layer": "L1",
+      "cmd": "算交換器 PoE 總功率",
+      "difficulty": 3,
+      "verdict": "總功率超標會隨機斷電",
+      "tags": [
+        "IoT",
+        "進階"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "H10",
+      "series": "企業",
+      "title": "上千台裝置的辦公室，DHCP 池不夠用",
+      "symptom": "IP 耗盡",
+      "env": "辦公室",
+      "layer": "L3",
+      "cmd": "看 DHCP 使用率",
+      "difficulty": 3,
+      "verdict": "縮短租約或擴網段",
+      "tags": [
+        "企業",
+        "進階"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "I01",
+      "series": "快問快答",
+      "title": "分享器放地上還是放高處？",
+      "symptom": "—",
+      "env": "家用",
+      "layer": "L1",
+      "cmd": "—",
+      "difficulty": 1,
+      "verdict": "越高越中央越好",
+      "tags": [
+        "迷思",
+        "入門"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "I02",
+      "series": "快問快答",
+      "title": "天線要朝上還是朝旁邊？",
+      "symptom": "—",
+      "env": "家用",
+      "layer": "L1",
+      "cmd": "—",
+      "difficulty": 1,
+      "verdict": "一支直一支橫涵蓋最好",
+      "tags": [
+        "迷思",
+        "入門"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "I03",
+      "series": "快問快答",
+      "title": "貼鋁箔紙能增強訊號嗎",
+      "symptom": "—",
+      "env": "家用",
+      "layer": "L1",
+      "cmd": "—",
+      "difficulty": 1,
+      "verdict": "能導向但別亂貼",
+      "tags": [
+        "迷思"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "I04",
+      "series": "快問快答",
+      "title": "網路線越貴越快？",
+      "symptom": "—",
+      "env": "家用",
+      "layer": "L1",
+      "cmd": "—",
+      "difficulty": 1,
+      "verdict": "超過規格就沒差",
+      "tags": [
+        "迷思",
+        "入門"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "I05",
+      "series": "快問快答",
+      "title": "關掉沒用的 WiFi 裝置會變快嗎",
+      "symptom": "—",
+      "env": "家用",
+      "layer": "L1",
+      "cmd": "—",
+      "difficulty": 1,
+      "verdict": "會，無線是共享媒介",
+      "tags": [
+        "迷思"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "I06",
+      "series": "快問快答",
+      "title": "5G 手機訊號跟 5G WiFi 是同一個嗎",
+      "symptom": "—",
+      "env": "行動",
+      "layer": "L1",
+      "cmd": "—",
+      "difficulty": 1,
+      "verdict": "完全不同，別搞混",
+      "tags": [
+        "迷思",
+        "入門"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "I07",
+      "series": "快問快答",
+      "title": "飛航模式開關能修好手機網路嗎",
+      "symptom": "—",
+      "env": "行動",
+      "layer": "L2",
+      "cmd": "—",
+      "difficulty": 1,
+      "verdict": "等於重連基地台，常有效",
+      "tags": [
+        "入門"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "I08",
+      "series": "快問快答",
+      "title": "電梯裡沒訊號是為什麼",
+      "symptom": "—",
+      "env": "行動",
+      "layer": "L1",
+      "cmd": "—",
+      "difficulty": 1,
+      "verdict": "金屬箱=法拉第籠",
+      "tags": [
+        "冷知識",
+        "入門"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "I09",
+      "series": "快問快答",
+      "title": "為什麼公司 WiFi 一定要輸入帳號",
+      "symptom": "—",
+      "env": "辦公室",
+      "layer": "L2",
+      "cmd": "—",
+      "difficulty": 2,
+      "verdict": "802.1X 企業級認證",
+      "tags": [
+        "企業",
+        "觀念"
+      ],
+      "status": "idea"
+    },
+    {
+      "id": "I10",
+      "series": "快問快答",
+      "title": "分享器燈號顏色代表什麼",
+      "symptom": "—",
+      "env": "家用",
+      "layer": "L1",
+      "cmd": "—",
+      "difficulty": 1,
+      "verdict": "一張圖看懂燈號",
+      "tags": [
+        "入門"
+      ],
+      "status": "idea"
+    }
+  ]
+}

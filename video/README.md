@@ -49,9 +49,42 @@ node render.mjs           # 約 1080 格 @30fps
 
 > 注意：智寶是智生活科技的商標角色，對外發佈前請先確認使用授權。
 
+## 配音
+
+旁白文字與時間點放在 `episodes/<ep>.json` 的 `narration`，一句一個時間點。
+
+```bash
+pip install edge-tts
+python3 voice.py ep01              # → out/ep01-vo.wav（台灣女聲，免費、免金鑰）
+./mix.sh ep01                      # 旁白混進影片
+./mix.sh ep01 assets/bgm.mp3       # 旁白 + 背景音樂（自動 ducking）
+```
+
+`voice.py` 會印出每一句的實際長度，並**警告哪一句會蓋到下一句**——
+超出就把那句話改短，不要硬擠。這是對稿最快的方式。
+
+引擎可切換：
+
+| `--engine` | 說明 |
+|---|---|
+| `edge`（預設） | Edge Neural TTS，`zh-TW-HsiaoChenNeural`。免費、不用金鑰，需連 `speech.platform.bing.com` |
+| `piper` | 完全離線。需 `--model xxx.onnx`，目前只有 zh-CN 低品質模型，僅適合對時間軸用 |
+
+要換成 Azure / ElevenLabs 只要在 `voice.py` 加一個 `synth_xxx()` 函式。
+
+## 背景音樂
+
+見 `assets/BGM-授權說明.md`。**不要抓 YouTube 上的音樂**，會被 Content ID 下架。
+
 ## 還沒做的（下一步）
 
-- **配音**：目前是無聲片。接 TTS（Azure / ElevenLabs 中文）產 mp3 + 逐字時間軸，
-  讓 `caps` 的秒數由語音時間軸自動生成，而不是手填。
-- **背景音樂**：需自備有授權的素材。
-- **批次**：`episodes/*.json` + 迴圈跑 render/encode。
+- **批次**：`episodes/*.json` + 迴圈跑 render/encode，一次產十集。
+- **字幕自動對齊**：現在 `timeline.js` 的字幕秒數是手填的，可以改由 TTS 的
+  word boundary 時間軸反推。
+- **題庫接線**：`episodes/topics.json` 有 115 個選題，還沒接上自動生腳本。
+
+## 題庫
+
+`episodes/topics.json`：115 個選題，依「症狀 × 環境 × OSI 層級」矩陣展開，分九個系列。
+每筆有 `id / series / title / symptom / env / layer / cmd / difficulty / verdict / tags / status`，
+`status` 走 `idea → scripted → rendered → published`，可以直接當排程表用。
