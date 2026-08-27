@@ -49,7 +49,23 @@ node render.mjs           # 約 1080 格 @30fps
 
 > 注意：智寶是智生活科技的商標角色，對外發佈前請先確認使用授權。
 
-## 配音
+## 配音（Windows 最短路徑）
+
+不想 clone 整包的話，只要 `make_ep01.py` 一個檔案。把它跟 `zhibao-ep01.mp4`
+放在同一個資料夾（例如「下載」），在那個資料夾開 PowerShell：
+
+```powershell
+pip install edge-tts imageio-ffmpeg
+python make_ep01.py                    # → zhibao-ep01-voiced.mp4
+python make_ep01.py --bgm bgm.mp3      # 加背景音樂
+python make_ep01.py --vo-only          # 只產旁白，先對時間
+python make_ep01.py --dry-run          # 用靜音跑一次，驗證流程
+```
+
+不需要另外安裝 ffmpeg（`imageio-ffmpeg` 這個 pip 套件就內含），也不需要 bash。
+**注意要先 `cd` 到影片所在資料夾**，在 `C:\Windows\System32` 執行會找不到檔案。
+
+## 配音（完整版，Mac / Linux）
 
 旁白文字與時間點放在 `episodes/<ep>.json` 的 `narration`，一句一個時間點。
 
