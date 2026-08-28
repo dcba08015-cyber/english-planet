@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{width:1080px;height:1920px;overflow:hidden;background:#FFF9F2}
+  body{font-family:'Noto Sans TC','WenQuanYi Zen Hei',sans-serif;-webkit-font-smoothing:antialiased}
+  #stage{position:relative;width:1080px;height:1920px;overflow:hidden;
+    background:linear-gradient(175deg,#FFFDF9 0%,#FFF4E8 48%,#EAF7F4 100%)}
+  .blob{position:absolute;border-radius:50%;filter:blur(110px);opacity:.55}
+  #b1{width:700px;height:700px;left:-220px;top:-160px;background:#BDECE4}
+  #b2{width:640px;height:640px;right:-200px;bottom:-140px;background:#FFE1C2}
+
+  /* 頂部 */
+  #bar{position:absolute;top:0;left:0;height:9px;width:100%;background:rgba(0,0,0,.07)}
+  #barfill{height:100%;width:0;background:#19C6B3}
+  #logo{position:absolute;top:64px;left:60px;display:flex;align-items:center;gap:14px;
+    background:#fff;border:2px solid #E4EDEA;padding:14px 28px 14px 18px;border-radius:999px;
+    box-shadow:0 8px 24px rgba(0,0,0,.06)}
+  #logo .dot{width:34px;height:34px;border-radius:11px;background:#19C6B3}
+  #logo span{color:#33413E;font-size:29px;font-weight:900}
+  #logo span b{color:#0E9A8A}
+
+  /* 大標 */
+  #hook{position:absolute;left:70px;right:70px;top:230px;text-align:center}
+  #hook .l{display:block;color:#1A2B28;font-weight:900;font-size:104px;line-height:1.22;letter-spacing:-1px}
+  #hook .l em{font-style:normal;color:#E0533C}
+  #hook .l u{text-decoration:none;color:#0E9A8A}
+
+  /* 步驟頭 */
+  #stephead{position:absolute;left:64px;right:64px;top:190px;display:flex;align-items:center;gap:26px}
+  #stepno{width:104px;height:104px;border-radius:32px;background:#19C6B3;color:#fff;
+    font-size:58px;font-weight:900;display:flex;align-items:center;justify-content:center;
+    box-shadow:0 12px 30px rgba(25,198,179,.4);flex:none}
+  #steptxt{color:#1A2B28;font-size:64px;font-weight:900;line-height:1.24}
+
+  /* 主要圖示區 */
+  #visual{position:absolute;left:0;right:0;top:360px;height:800px}
+  #visual svg{position:absolute;left:50%;top:50%;transform-origin:center}
+  #svPhone{width:472px;height:854px}
+  #svModem{width:940px;height:712px}
+  #svClock{width:520px;height:520px}
+  .card{background:#fff;border:3px solid #E7EFEC;border-radius:44px;
+    box-shadow:0 26px 70px rgba(20,40,36,.13);padding:44px}
+
+  /* 三格動作 */
+  #acts{position:absolute;left:64px;right:64px;top:1180px;display:flex;gap:22px;justify-content:center}
+  .act{flex:1;background:#fff;border:3px solid #E7EFEC;border-radius:34px;padding:30px 22px;
+    text-align:center;box-shadow:0 16px 44px rgba(20,40,36,.1)}
+  .act .n{width:66px;height:66px;border-radius:22px;background:#EAF7F4;color:#0E9A8A;
+    font-size:36px;font-weight:900;display:flex;align-items:center;justify-content:center;
+    margin:0 auto 16px}
+  .act p{color:#1A2B28;font-size:38px;font-weight:900;line-height:1.4}
+  .act small{display:block;color:#6B7C79;font-size:29px;font-weight:700;margin-top:8px}
+
+  /* 大字幕 */
+  #cap{position:absolute;left:56px;right:56px;bottom:300px;text-align:center}
+  #cap span{display:inline-block;background:#1A2B28;color:#fff;font-size:60px;font-weight:900;
+    line-height:1.4;padding:28px 46px;border-radius:30px;box-shadow:0 20px 50px rgba(0,0,0,.22)}
+  #cap span u{text-decoration:none;color:#5EE6D2}
+  #cap span em{font-style:normal;color:#FFB84D}
+
+  /* 電話 CTA */
+  #tel{position:absolute;left:64px;right:64px;top:1010px;background:#fff;border:4px solid #19C6B3;
+    border-radius:40px;padding:44px 40px;text-align:center;box-shadow:0 24px 60px rgba(20,40,36,.14)}
+  #tel .t{color:#33413E;font-size:44px;font-weight:900;margin-bottom:18px}
+  #tel .num{color:#0E9A8A;font-size:96px;font-weight:900;letter-spacing:2px;line-height:1.1}
+  #tel .alt{color:#6B7C79;font-size:34px;font-weight:700;margin-top:20px}
+
+  #char{position:absolute;left:0;top:0;transform-origin:0 0}
+  #bubble{position:absolute;background:#fff;border:3px solid #1A2B28;color:#1A2B28;
+    font-size:44px;font-weight:900;padding:22px 34px;border-radius:28px;white-space:nowrap;
+    box-shadow:0 14px 34px rgba(0,0,0,.14)}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div class="blob" id="b1"></div><div class="blob" id="b2"></div>
+
+  <div id="logo"><span class="dot"></span><span>智生活｜<b>智寶教你</b></span></div>
+
+  <div id="hook">
+    <span class="l" id="h1">Wi-Fi <u>有連上</u></span>
+    <span class="l" id="h2">網頁卻<em>打不開</em>？</span>
+  </div>
+
+  <div id="stephead"><div id="stepno">1</div><div id="steptxt">先看牆邊那台機器</div></div>
+
+  <div id="visual">
+    <!-- 手機 -->
+    <svg id="svPhone" width="420" height="760" viewBox="0 0 420 760">
+      <rect x="10" y="10" width="400" height="740" rx="56" fill="#1A2B28"/>
+      <rect x="26" y="26" width="368" height="708" rx="44" fill="#F4F8F7"/>
+      <rect x="150" y="34" width="120" height="26" rx="13" fill="#1A2B28"/>
+      <g id="phWifi" transform="translate(210,150)">
+        <path d="M-72 12 A102 102 0 0 1 72 12" stroke="#0E9A8A" stroke-width="18" fill="none" stroke-linecap="round"/>
+        <path d="M-46 44 A66 66 0 0 1 46 44" stroke="#0E9A8A" stroke-width="18" fill="none" stroke-linecap="round"/>
+        <circle cx="0" cy="80" r="15" fill="#0E9A8A"/>
+      </g>
+      <text x="210" y="300" font-size="34" font-weight="900" text-anchor="middle" fill="#0E9A8A" font-family="'Noto Sans TC',sans-serif">已連線</text>
+      <rect x="60" y="350" width="300" height="300" rx="26" fill="#fff" stroke="#E0E8E6" stroke-width="3"/>
+      <g transform="translate(210,470)">
+        <circle r="58" fill="none" stroke="#E0533C" stroke-width="12"/>
+        <line x1="-30" y1="-30" x2="30" y2="30" stroke="#E0533C" stroke-width="12" stroke-linecap="round"/>
+        <line x1="30" y1="-30" x2="-30" y2="30" stroke="#E0533C" stroke-width="12" stroke-linecap="round"/>
+      </g>
+      <text x="210" y="600" font-size="30" font-weight="700" text-anchor="middle" fill="#7A8886" font-family="'Noto Sans TC',sans-serif">網頁打不開</text>
+    </svg>
+
+    <!-- 數據機 -->
+    <svg id="svModem" width="740" height="560" viewBox="0 0 740 560">
+      <ellipse cx="370" cy="520" rx="250" ry="26" fill="#000" opacity=".08"/>
+      <rect x="150" y="150" width="440" height="330" rx="42" fill="#FFFFFF" stroke="#3F4E4B" stroke-width="7"/>
+      <rect x="150" y="150" width="440" height="90" rx="42" fill="#F1F6F5"/>
+      <rect x="150" y="216" width="440" height="26" fill="#F1F6F5"/>
+      <line x1="150" y1="242" x2="590" y2="242" stroke="#E2EAE8" stroke-width="5"/>
+      <g id="lamps">
+        <circle id="lp1" cx="240" cy="330" r="27" fill="#3FD68A"/>
+        <circle id="lp2" cx="325" cy="330" r="27" fill="#3FD68A"/>
+        <circle id="lp3" cx="410" cy="330" r="27" fill="#3FD68A"/>
+        <circle id="lp4" cx="495" cy="330" r="27" fill="#3FD68A"/>
+      </g>
+      <g id="ring" opacity="0"><circle cx="495" cy="330" r="44" fill="none" stroke="#E0533C" stroke-width="9"/></g>
+      <text x="370" y="430" font-size="38" font-weight="900" text-anchor="middle" fill="#7A8886" font-family="'Noto Sans TC',sans-serif">牆邊那台一直閃燈的機器</text>
+      <!-- 插頭 -->
+      <g id="plug">
+        <path id="cord" d="M590 400 C 680 400 690 470 660 500" stroke="#3F4E4B" stroke-width="12" fill="none" stroke-linecap="round"/>
+        <rect x="618" y="482" width="80" height="56" rx="14" fill="#FFFFFF" stroke="#3F4E4B" stroke-width="7"/>
+        <line x1="638" y1="470" x2="638" y2="490" stroke="#3F4E4B" stroke-width="9" stroke-linecap="round"/>
+        <line x1="678" y1="470" x2="678" y2="490" stroke="#3F4E4B" stroke-width="9" stroke-linecap="round"/>
+      </g>
+    </svg>
+
+    <!-- 時鐘（數 30 秒） -->
+    <svg id="svClock" width="460" height="460" viewBox="0 0 460 460">
+      <circle cx="230" cy="230" r="182" fill="#fff" stroke="#3F4E4B" stroke-width="12"/>
+      <circle cx="230" cy="230" r="182" fill="none" stroke="#19C6B3" stroke-width="18"
+        stroke-linecap="round" id="dial" transform="rotate(-90 230 230)"
+        stroke-dasharray="1144" stroke-dashoffset="1144"/>
+      <text id="clockNum" x="230" y="268" font-size="150" font-weight="900" text-anchor="middle"
+        fill="#1A2B28" font-family="'Noto Sans TC',sans-serif">30</text>
+    </svg>
+  </div>
+
+  <div id="acts">
+    <div class="act"><div class="n">1</div><p>拔插頭</p><small>直接拔起來</small></div>
+    <div class="act"><div class="n">2</div><p>數到 30</p><small>慢慢數就好</small></div>
+    <div class="act"><div class="n">3</div><p>插回去</p><small>等燈變綠</small></div>
+  </div>
+
+  <div id="tel">
+    <div class="t">還是不行的話，打給我們</div>
+    <div class="num">0800-000-000</div>
+    <div class="alt">或在智生活 App 點「我要報修」</div>
+  </div>
+
+  <div id="cap"><span id="captxt"></span></div>
+
+  <svg id="char" width="420" height="460" viewBox="0 0 420 460" fill="none">
+    <ellipse cx="210" cy="432" rx="120" ry="18" fill="#000" opacity=".14"/>
+    <g stroke="#4B4B4B" stroke-width="7" stroke-linejoin="round">
+      <ellipse cx="168" cy="404" rx="31" ry="23" fill="#FDFDFB"/>
+      <ellipse cx="252" cy="404" rx="31" ry="23" fill="#FDFDFB"/>
+      <ellipse id="armL" cx="112" cy="330" rx="25" ry="38" fill="#FDFDFB"/>
+      <ellipse id="armR" cx="308" cy="330" rx="25" ry="38" fill="#FDFDFB"/>
+      <rect x="126" y="286" width="168" height="112" rx="56" fill="#FDFDFB"/>
+      <circle cx="130" cy="116" r="37" fill="#FDFDFB"/>
+      <circle cx="290" cy="116" r="37" fill="#FDFDFB"/>
+      <ellipse cx="210" cy="212" rx="139" ry="123" fill="#FDFDFB"/>
+      <path d="M210 356 l-34 -18 v36 z" fill="#3A3A3A"/>
+      <path d="M210 356 l34 -18 v36 z" fill="#3A3A3A"/>
+    </g>
+    <ellipse cx="116" cy="252" rx="25" ry="14" fill="#F7BFC9"/>
+    <ellipse cx="304" cy="252" rx="25" ry="14" fill="#F7BFC9"/>
+    <ellipse id="eyeL" cx="166" cy="214" rx="14" ry="14" fill="#2E2E2E"/>
+    <ellipse id="eyeR" cx="254" cy="214" rx="14" ry="14" fill="#2E2E2E"/>
+    <path id="eyeLh" d="M150 220 q16 -22 32 0" stroke="#2E2E2E" stroke-width="9" stroke-linecap="round" fill="none" opacity="0"/>
+    <path id="eyeRh" d="M238 220 q16 -22 32 0" stroke="#2E2E2E" stroke-width="9" stroke-linecap="round" fill="none" opacity="0"/>
+    <path id="mouth" d="M192 296 q18 12 36 0" stroke="#4B4B4B" stroke-width="6" stroke-linecap="round" fill="none"/>
+    <path d="M210 218 Q234 227 243 250 Q234 273 210 282 Q186 273 177 250 Q186 227 210 218 Z" fill="#19C6B3"/>
+  </svg>
+  <div id="bubble"></div>
+
+  <div id="bar"><div id="barfill"></div></div>
+</div>
+<script src="timeline-v2.js"></script>
+</body>
+</html>
