@@ -1,3 +1,5 @@
 node_modules/
 frames/
 out/
+tmp/
+presenter/*.mp4
