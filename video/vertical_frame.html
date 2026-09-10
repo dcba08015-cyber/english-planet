@@ -1,0 +1,38 @@
+<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@700;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1080px;height:1920px;background:transparent}
+body{font-family:'Noto Sans TC','WenQuanYi Zen Hei',sans-serif;-webkit-font-smoothing:antialiased}
+#f{position:relative;width:1080px;height:1920px}
+/* 影片區塊上下的品牌色細線；影片本身從下方透出來 */
+.bar{position:absolute;left:0;width:1080px;height:6px;background:#19C6B3}
+#logo{position:absolute;top:70px;left:60px;display:flex;align-items:center;gap:14px;
+  background:#fff;border:2px solid #E4EDEA;padding:13px 26px 13px 17px;border-radius:999px;
+  box-shadow:0 8px 24px rgba(0,0,0,.07)}
+#logo .dot{width:32px;height:32px;border-radius:10px;background:#19C6B3}
+#logo span{color:#33413E;font-size:28px;font-weight:900}
+#logo span b{color:#0E9A8A}
+#title{position:absolute;left:60px;right:60px;top:210px;text-align:center;
+  color:#1A2B28;font-size:92px;font-weight:900;line-height:1.22;letter-spacing:-1px}
+#title em{font-style:normal;color:#E0533C}
+#sub{position:absolute;left:56px;right:56px;bottom:230px;text-align:center}
+#sub span{display:inline-block;background:#1A2B28;color:#fff;font-size:58px;font-weight:900;
+  line-height:1.4;padding:26px 44px;border-radius:28px;box-shadow:0 18px 46px rgba(0,0,0,.25)}
+#sub span u{text-decoration:none;color:#5EE6D2}
+</style></head><body><div id="f">
+  <div id="logo"><span class="dot"></span><span>智生活｜<b>客服小幫手</b></span></div>
+  <div id="title"></div>
+  <div class="bar" id="barTop"></div>
+  <div class="bar" id="barBot"></div>
+  <div id="sub"><span></span></div>
+</div>
+<script>
+window.setFrame = (o) => {
+  document.getElementById('title').innerHTML = o.title || '';
+  const s = document.querySelector('#sub span');
+  if (o.sub) { s.innerHTML = o.sub; } else { document.getElementById('sub').style.display = 'none'; }
+  document.getElementById('barTop').style.top = (o.top - 6) + 'px';
+  document.getElementById('barBot').style.top = (o.top + o.vh) + 'px';
+};
+</script></body></html>
